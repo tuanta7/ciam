@@ -1,4 +1,4 @@
-# Centralize IAM
+# Centralized IAM
 
 ![Status](https://img.shields.io/badge/status-development-orange)
 ![Language](https://img.shields.io/badge/lang-Go-blue)
@@ -31,6 +31,6 @@ The complete list of specifications can be found [here](https://openid.net/devel
 | Specification                      | Status        |
 |------------------------------------|---------------|
 | OpenID Connect Core 1.0            | ⏳ Development |
-| OAuth 2.0 Form Post Response Mode  | ✅ Supported   |
+| OAuth 2.0 Form Post Response Mode  | ⏳ Development |
 | OpenID Connect RP-Initiated Logout | Todo          |
 | Pairwise Identifier                | Todo          |
