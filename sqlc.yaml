@@ -1,0 +1,10 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "data/sqlc/"
+    schema: "data/migrations/"
+    gen:
+      go:
+        package: "store" # The Go package name
+        out: "internal/repository/store"  # The directory where files will be written
+        sql_package: "pgx/v5" # The sql package (driver) to use in the generated code

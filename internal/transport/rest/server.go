@@ -2,96 +2,68 @@ package rest
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"net/http"
+	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/tuanta7/hydros/internal/config"
-	v1admin "github.com/tuanta7/hydros/internal/transport/rest/admin/v1"
-	v1public "github.com/tuanta7/hydros/internal/transport/rest/public/v1"
+	"github.com/go-chi/chi/v5"
+	"github.com/tuanta7/ciam/internal/transport/rest/handler"
+	"github.com/tuanta7/ciam/internal/transport/rest/middleware"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
 )
 
 type Server struct {
-	cfg           *config.Config
-	router        *gin.Engine
 	server        *http.Server
-	clientHandler *v1admin.ClientHandler
-	flowHandler   *v1admin.FlowHandler
-	oauthHandler  *v1public.OAuthHandler
-	formHandler   *v1public.FormHandler
+	router        chi.Router
+	clientHandler *handler.ClientHandler
+	meter         metric.Meter
 }
 
-func NewServer(cfg *config.Config,
-	clientHandler *v1admin.ClientHandler,
-	flowHandler *v1admin.FlowHandler,
-	oauthHandler *v1public.OAuthHandler,
-	formHandler *v1public.FormHandler,
+func NewServer(
+	addr string,
+	clientHandler *handler.ClientHandler,
 ) *Server {
-	if !cfg.IsDebugging() {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
-	engine := gin.New()
-	engine.Use(gin.Recovery())
-
-	engine.Static("/static", "./static")
-	engine.LoadHTMLGlob("./static/html/*")
+	router := chi.NewRouter()
 
 	return &Server{
-		cfg:    cfg,
-		router: engine,
 		server: &http.Server{
-			Addr:    fmt.Sprintf("%s:%s", cfg.RestServerHost, cfg.RestServerPort),
-			Handler: nil,
+			Addr:    addr,
+			Handler: router,
 		},
-
+		router:        router,
 		clientHandler: clientHandler,
-		oauthHandler:  oauthHandler,
-		formHandler:   formHandler,
-		flowHandler:   flowHandler,
+		meter:         otel.Meter("rest_server_meter"),
 	}
 }
 
 func (s *Server) Run() error {
-	s.RegisterRoutes()
+	if err := middleware.InitMetricsMiddleware(s.meter); err != nil {
+		return err
+	}
+
+	s.registerRoutes()
+
+	log.Printf("Server is running on %s\n", s.server.Addr)
 	return s.server.ListenAndServe()
 }
 
-func (s *Server) Shutdown(ctx context.Context) error {
-	err := s.server.Shutdown(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
+func (s *Server) Timeout() time.Duration {
+	return 20 * time.Second
 }
 
-func (s *Server) RegisterRoutes() {
-	// Authorization Service - OAuth APIs
-	s.router.GET("/oauth/authorize", s.oauthHandler.HandleAuthorizeRequest)
-	s.router.POST("/oauth/token", s.oauthHandler.HandleTokenRequest)
-	s.router.POST("/oauth/introspect", s.oauthHandler.HandleIntrospectionRequest)
-	s.router.POST("/oauth/revoke", nil)
-	s.router.GET("/oauth/logout", nil)
-	s.router.POST("/oauth/logout", nil)
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.server.Shutdown(ctx)
+}
 
-	// Default forms and submit endpoints
-	s.router.GET("/self-service/login", s.formHandler.LoginPage)
-	s.router.POST("/self-service/login", s.formHandler.Login)
-	s.router.GET("/self-service/consent", s.formHandler.ConsentPage)
-	s.router.POST("/self-service/consent", s.formHandler.Consent)
+func (s *Server) registerRoutes() {
+	s.router.Route("/api/internal/v1/clients", func(r chi.Router) {
+		r.Use(middleware.WithMetric)
 
-	// Authorization Service - Admin APIs
-	adminRouter := s.router.Group("/admin/api/v1")
-	adminRouter.GET("/clients", s.clientHandler.List)
-	adminRouter.POST("/clients", s.clientHandler.Create)
-
-	// For external identity providers
-	adminRouter.GET("/login/flows", s.flowHandler.GetLoginFlow)
-	adminRouter.PUT("/login/accept", s.flowHandler.AcceptLogin)
-	adminRouter.PUT("/login/reject", s.flowHandler.RejectLogin)
-	adminRouter.GET("/consent/flows", nil)
-	adminRouter.PUT("/consent/accept", nil)
-	adminRouter.PUT("/consent/reject", nil)
-
-	s.server.Handler = s.router
+		r.With(middleware.Pagination).Get("/", s.clientHandler.ListClients)
+		r.Post("/", s.clientHandler.CreateClient)
+		r.Get("/{id}", s.clientHandler.GetClient)
+		r.Put("/{id}", s.clientHandler.UpdateClient)
+		r.Delete("/{id}", s.clientHandler.DeleteClient)
+	})
 }

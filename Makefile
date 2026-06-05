@@ -1,5 +1,5 @@
 ENV_FILE=.env
-MIGRATIONS_FOLDER=migrations
+MIGRATIONS_FOLDER=./data/migrations
 PROTO_FOLDER=protobuf/proto
 BUF_VERSION?=1.58.0
 
@@ -30,14 +30,19 @@ install-goose:
 migrate-sql:
 	goose -dir=$(MIGRATIONS_FOLDER)/postgres create $(NAME) sql
 
-migrate-go:
-	goose -dir=$(MIGRATIONS_FOLDER)/go create $(NAME) go
-
 migrate-up:
 	goose -env $(ENV_FILE) up
 
 migrate-down:
 	goose -env $(ENV_FILE) down
+
+sqlc-gen:
+	echo "Generating Go code from SQL queries using sqlc"
+	docker run --rm -v $(PWD):/src -w /src sqlc/sqlc:1.30.0 generate
+
+mockery-gen:
+	echo "Generating mock implementations using mockery"
+	docker run --rm -v $(PWD):/src -w /src vektra/mockery:v3.7.0
 
 install-buf:
 	go install github.com/bufbuild/buf/cmd/buf@v${BUF_VERSION}
