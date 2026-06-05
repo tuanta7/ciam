@@ -8,3 +8,28 @@ sql:
         package: "store" # The Go package name
         out: "internal/repository/store"  # The directory where files will be written
         sql_package: "pgx/v5" # The sql package (driver) to use in the generated code
+        overrides:
+          - column: "client.scope"
+            go_type:
+              import: "github.com/tuanta7/ciam/pkg/sqlx"
+              type: "StringArray"
+          - column: "client.redirect_uris"
+            go_type:
+              import: "github.com/tuanta7/ciam/pkg/sqlx"
+              type: "StringArray"
+          - column: "client.post_logout_redirect_uris"
+            go_type:
+              import: "github.com/tuanta7/ciam/pkg/sqlx"
+              type: "StringArray"
+          - column: "client.grant_types"
+            go_type:
+              import: "github.com/tuanta7/ciam/pkg/sqlx"
+              type: "StringArray"
+          - column: "client.response_types"
+            go_type:
+              import: "github.com/tuanta7/ciam/pkg/sqlx"
+              type: "StringArray"
+          - column: "client.audience"
+            go_type:
+              import: "github.com/tuanta7/ciam/pkg/sqlx"
+              type: "StringArray"

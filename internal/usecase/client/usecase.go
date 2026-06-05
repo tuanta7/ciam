@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -38,7 +37,6 @@ type CreateInput struct {
 	ID                             string   `json:"id,omitempty"`
 	Name                           string   `json:"name" validate:"required"`
 	Description                    string   `json:"description"`
-	Secret                         string   `json:"secret"`
 	Scopes                         []string `json:"scopes"`
 	RedirectURIs                   []string `json:"redirect_uris"`
 	PostLogoutRedirectURIs         []string `json:"post_logout_redirect_uris"`
@@ -77,11 +75,7 @@ func (uc *UseCase) List(ctx context.Context, page, pageSize int32) ([]*Client, e
 
 	clients := make([]*Client, 0, len(rows))
 	for _, row := range rows {
-		c, err := fromStore(row)
-		if err != nil {
-			return nil, err
-		}
-		clients = append(clients, c)
+		clients = append(clients, NewClientFromStore(row))
 	}
 	return clients, nil
 }
@@ -91,29 +85,27 @@ func (uc *UseCase) Get(ctx context.Context, id string) (*Client, error) {
 	if err != nil {
 		return nil, mapNotFound(err)
 	}
-	return fromStore(row)
+	return NewClientFromStore(row), nil
 }
 
 func (uc *UseCase) Create(ctx context.Context, in CreateInput) (*Client, error) {
-	normalizeInput(&in)
-	if in.ID == "" {
-		in.ID = uuid.NewString()
-	}
-	if err := validateEnums(in); err != nil {
+	if err := in.validate(); err != nil {
 		return nil, err
 	}
+
+	in.normalizeInput()
 
 	row, err := uc.repo.CreateClient(ctx, store.CreateClientParams{
 		ID:                             in.ID,
 		Name:                           in.Name,
 		Description:                    in.Description,
-		Secret:                         in.Secret,
-		Scope:                          mustJSON(in.Scopes),
-		RedirectUris:                   mustJSON(in.RedirectURIs),
-		PostLogoutRedirectUris:         mustJSON(in.PostLogoutRedirectURIs),
-		GrantTypes:                     mustJSON(in.GrantTypes),
-		ResponseTypes:                  mustJSON(in.ResponseTypes),
-		Audience:                       mustJSON(in.Audiences),
+		Secret:                         "",
+		Scope:                          in.Scopes,
+		RedirectUris:                   in.RedirectURIs,
+		PostLogoutRedirectUris:         in.PostLogoutRedirectURIs,
+		GrantTypes:                     in.GrantTypes,
+		ResponseTypes:                  in.ResponseTypes,
+		Audience:                       in.Audiences,
 		TokenEndpointAuthMethod:        in.TokenEndpointAuthMethod,
 		ApplicationType:                in.ApplicationType,
 		AccessTokenType:                in.AccessTokenType,
@@ -128,26 +120,26 @@ func (uc *UseCase) Create(ctx context.Context, in CreateInput) (*Client, error) 
 	if err != nil {
 		return nil, err
 	}
-	return fromStore(row)
+
+	return NewClientFromStore(row), nil
 }
 
 func (uc *UseCase) Update(ctx context.Context, id string, in UpdateInput) (*Client, error) {
-	normalizeInput(&in)
-	if err := validateEnums(in); err != nil {
+	if err := in.validate(); err != nil {
 		return nil, err
 	}
 
+	in.normalizeInput()
 	row, err := uc.repo.UpdateClient(ctx, store.UpdateClientParams{
 		ID:                             id,
 		Name:                           in.Name,
 		Description:                    in.Description,
-		Secret:                         in.Secret,
-		Scope:                          mustJSON(in.Scopes),
-		RedirectUris:                   mustJSON(in.RedirectURIs),
-		PostLogoutRedirectUris:         mustJSON(in.PostLogoutRedirectURIs),
-		GrantTypes:                     mustJSON(in.GrantTypes),
-		ResponseTypes:                  mustJSON(in.ResponseTypes),
-		Audience:                       mustJSON(in.Audiences),
+		Scope:                          in.Scopes,
+		RedirectUris:                   in.RedirectURIs,
+		PostLogoutRedirectUris:         in.PostLogoutRedirectURIs,
+		GrantTypes:                     in.GrantTypes,
+		ResponseTypes:                  in.ResponseTypes,
+		Audience:                       in.Audiences,
 		TokenEndpointAuthMethod:        in.TokenEndpointAuthMethod,
 		ApplicationType:                in.ApplicationType,
 		AccessTokenType:                in.AccessTokenType,
@@ -161,94 +153,62 @@ func (uc *UseCase) Update(ctx context.Context, id string, in UpdateInput) (*Clie
 	if err != nil {
 		return nil, mapNotFound(err)
 	}
-	return fromStore(row)
+
+	return NewClientFromStore(row), nil
 }
 
 func (uc *UseCase) Delete(ctx context.Context, id string) error {
 	return uc.repo.DeleteClient(ctx, id)
 }
 
-func normalizeInput(in *CreateInput) {
+func (in *CreateInput) normalizeInput() {
+	if in.ID == "" {
+		in.ID = uuid.NewString()
+	}
+
 	if len(in.Scopes) == 0 {
 		in.Scopes = []string{oidc.ScopeOpenID}
 	}
+
 	if len(in.GrantTypes) == 0 {
 		in.GrantTypes = []string{string(oidc.GrantTypeCode)}
 	}
+
 	if len(in.ResponseTypes) == 0 {
 		in.ResponseTypes = []string{string(oidc.ResponseTypeCode)}
 	}
+
 	if in.TokenEndpointAuthMethod == "" {
 		in.TokenEndpointAuthMethod = string(oidc.AuthMethodBasic)
 	}
+
 	if in.ApplicationType == "" {
 		in.ApplicationType = op.ApplicationTypeWeb.String()
 	}
+
 	if in.AccessTokenType == "" {
 		in.AccessTokenType = op.AccessTokenTypeBearer.String()
 	}
+
 	if in.IDTokenLifetimeSeconds == 0 {
 		in.IDTokenLifetimeSeconds = 3600
 	}
+
 	if in.UpdatedBy == "" {
 		in.UpdatedBy = in.CreatedBy
 	}
 }
 
-func validateEnums(in CreateInput) error {
+func (in *CreateInput) validate() error {
 	if _, err := op.ApplicationTypeString(in.ApplicationType); err != nil {
 		return fmt.Errorf("%w: %v", ErrInvalidClient, err)
 	}
+
 	if _, err := op.AccessTokenTypeString(in.AccessTokenType); err != nil {
 		return fmt.Errorf("%w: %v", ErrInvalidClient, err)
 	}
+
 	return nil
-}
-
-func fromStore(row store.Client) (*Client, error) {
-	return &Client{
-		ID:                            row.ID,
-		Name:                          row.Name,
-		Description:                   row.Description,
-		Secret:                        row.Secret,
-		Scopes:                        parseJSON(row.Scope),
-		RedirectURIList:               parseJSON(row.RedirectUris),
-		PostLogoutRedirectURIList:     parseJSON(row.PostLogoutRedirectUris),
-		GrantTypeList:                 parseJSON(row.GrantTypes),
-		ResponseTypeList:              parseJSON(row.ResponseTypes),
-		Audiences:                     parseJSON(row.Audience),
-		TokenEndpointAuthMethod:       row.TokenEndpointAuthMethod,
-		ApplicationTypeName:           row.ApplicationType,
-		AccessTokenTypeName:           row.AccessTokenType,
-		LoginURLTemplate:              row.LoginUrl,
-		IDTokenLifetimeSeconds:        row.IDTokenLifetimeSeconds,
-		DevModeEnabled:                row.DevMode,
-		ClockSkewSeconds:              row.ClockSkewSeconds,
-		IDTokenUserinfoClaimsAsserted: row.IDTokenUserinfoClaimsAssertion,
-		CreatedBy:                     row.CreatedBy,
-		UpdatedBy:                     row.UpdatedBy,
-		CreatedAt:                     row.CreatedAt.Time,
-		UpdatedAt:                     row.UpdatedAt.Time,
-	}, nil
-}
-
-func parseJSON(raw string) []string {
-	if raw == "" {
-		return nil
-	}
-	var values []string
-	if err := json.Unmarshal([]byte(raw), &values); err != nil {
-		return nil
-	}
-	return values
-}
-
-func mustJSON(values []string) string {
-	if values == nil {
-		values = []string{}
-	}
-	data, _ := json.Marshal(values)
-	return string(data)
 }
 
 func mapNotFound(err error) error {

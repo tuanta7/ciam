@@ -5,6 +5,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/tuanta7/ciam/internal/repository/store"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
@@ -34,6 +35,33 @@ type Client struct {
 	UpdatedBy                     string    `json:"updated_by"`
 	CreatedAt                     time.Time `json:"created_at"`
 	UpdatedAt                     time.Time `json:"updated_at"`
+}
+
+func NewClientFromStore(row store.Client) *Client {
+	return &Client{
+		ID:                            row.ID,
+		Name:                          row.Name,
+		Description:                   row.Description,
+		Secret:                        row.Secret,
+		Scopes:                        row.Scope,
+		RedirectURIList:               row.RedirectUris,
+		PostLogoutRedirectURIList:     row.PostLogoutRedirectUris,
+		GrantTypeList:                 row.GrantTypes,
+		ResponseTypeList:              row.ResponseTypes,
+		Audiences:                     row.Audience,
+		TokenEndpointAuthMethod:       row.TokenEndpointAuthMethod,
+		ApplicationTypeName:           row.ApplicationType,
+		AccessTokenTypeName:           row.AccessTokenType,
+		LoginURLTemplate:              row.LoginUrl,
+		IDTokenLifetimeSeconds:        row.IDTokenLifetimeSeconds,
+		DevModeEnabled:                row.DevMode,
+		ClockSkewSeconds:              row.ClockSkewSeconds,
+		IDTokenUserinfoClaimsAsserted: row.IDTokenUserinfoClaimsAssertion,
+		CreatedBy:                     row.CreatedBy,
+		UpdatedBy:                     row.UpdatedBy,
+		CreatedAt:                     row.CreatedAt.Time,
+		UpdatedAt:                     row.UpdatedAt.Time,
+	}
 }
 
 func (c *Client) GetID() string {

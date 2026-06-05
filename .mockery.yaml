@@ -5,6 +5,6 @@ template: 'testify'
 pkgname: 'mock{{.SrcPackageName}}'
 recursive: true
 packages:
-  github.com/tuanta7/ciam/internal/client:
+  github.com/tuanta7/ciam/internal/usecase/client:
     config:
       all: true

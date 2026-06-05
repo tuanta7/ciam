@@ -40,24 +40,23 @@ UPDATE client
 SET
     name = $1,
     description = $2,
-    secret = $3,
-    scope = $4,
-    redirect_uris = $5,
-    post_logout_redirect_uris = $6,
-    grant_types = $7,
-    response_types = $8,
-    audience = $9,
-    token_endpoint_auth_method = $10,
-    application_type = $11,
-    access_token_type = $12,
-    login_url = $13,
-    id_token_lifetime_seconds = $14,
-    dev_mode = $15,
-    clock_skew_seconds = $16,
-    id_token_userinfo_claims_assertion = $17,
-    updated_by = $18,
+    scope = $3,
+    redirect_uris = $4,
+    post_logout_redirect_uris = $5,
+    grant_types = $6,
+    response_types = $7,
+    audience = $8,
+    token_endpoint_auth_method = $9,
+    application_type = $10,
+    access_token_type = $11,
+    login_url = $12,
+    id_token_lifetime_seconds = $13,
+    dev_mode = $14,
+    clock_skew_seconds = $15,
+    id_token_userinfo_claims_assertion = $16,
+    updated_by = $17,
     updated_at = now()
-WHERE id = $19
+WHERE id = $18
 RETURNING *;
 
 -- name: DeleteClient :exec
