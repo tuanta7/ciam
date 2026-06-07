@@ -5,16 +5,16 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/tuanta7/ciam/internal/client"
+	"github.com/tuanta7/ciam/internal/oauth2client"
 	"github.com/tuanta7/ciam/internal/transport/rest/middleware"
 	"github.com/tuanta7/ciam/pkg/httpx"
 )
 
 type ClientHandler struct {
-	uc *client.UseCase
+	uc *oauth2client.UseCase
 }
 
-func NewClientHandler(uc *client.UseCase) *ClientHandler {
+func NewClientHandler(uc *oauth2client.UseCase) *ClientHandler {
 	return &ClientHandler{
 		uc: uc,
 	}
@@ -42,7 +42,7 @@ func (h *ClientHandler) GetClient(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
-	var input client.CreateInput
+	var input oauth2client.CreateInput
 	if err := httpx.DecodeAndValidateJSON(r.Body, &input); err != nil {
 		_ = httpx.ErrorJSON(w, httpx.NewInvalidArgumentError(httpx.WithDescription(err.Error())))
 		return
@@ -58,7 +58,7 @@ func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ClientHandler) UpdateClient(w http.ResponseWriter, r *http.Request) {
-	var input client.UpdateInput
+	var input oauth2client.UpdateInput
 	if err := httpx.DecodeAndValidateJSON(r.Body, &input); err != nil {
 		_ = httpx.ErrorJSON(w, httpx.NewInvalidArgumentError(httpx.WithDescription(err.Error())))
 		return
@@ -84,9 +84,9 @@ func (h *ClientHandler) DeleteClient(w http.ResponseWriter, r *http.Request) {
 
 func (h *ClientHandler) writeError(w http.ResponseWriter, err error) {
 	switch {
-	case errors.Is(err, client.ErrNotFound):
+	case errors.Is(err, oauth2client.ErrNotFound):
 		_ = httpx.ErrorJSON(w, httpx.NewError(http.StatusNotFound, "not found", httpx.WithDescription(err.Error())))
-	case errors.Is(err, client.ErrInvalidClient):
+	case errors.Is(err, oauth2client.ErrInvalidClient):
 		_ = httpx.ErrorJSON(w, httpx.NewInvalidArgumentError(httpx.WithDescription(err.Error())))
 	default:
 		_ = httpx.ErrorJSON(w, httpx.NewInternalError(httpx.WithDescription(err.Error())))

@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/tuanta7/ciam/internal/client"
 	"github.com/tuanta7/ciam/internal/config"
+	"github.com/tuanta7/ciam/internal/oauth2client"
 	"github.com/tuanta7/ciam/internal/repository/postgres"
 	"github.com/tuanta7/ciam/internal/repository/store"
 	"github.com/tuanta7/ciam/internal/transport/rest"
@@ -30,7 +30,7 @@ func main() {
 			defer pool.Close()
 
 			pgRepo := store.New(pool)
-			clientUC := client.NewUseCase(pgRepo)
+			clientUC := oauth2client.NewUseCase(pgRepo)
 			clientHandler := handler.NewClientHandler(clientUC)
 
 			server := rest.NewServer(cfg.BindAddress, clientHandler)

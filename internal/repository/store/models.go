@@ -6,7 +6,6 @@ package store
 
 import (
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/tuanta7/ciam/pkg/sqlx"
 )
 
 type Client struct {
@@ -14,12 +13,12 @@ type Client struct {
 	Name                           string
 	Description                    string
 	Secret                         string
-	Scope                          sqlx.StringArray
-	RedirectUris                   sqlx.StringArray
-	PostLogoutRedirectUris         sqlx.StringArray
-	GrantTypes                     sqlx.StringArray
-	ResponseTypes                  sqlx.StringArray
-	Audience                       sqlx.StringArray
+	Scope                          []string
+	RedirectUris                   []string
+	PostLogoutRedirectUris         []string
+	GrantTypes                     []string
+	ResponseTypes                  []string
+	Audience                       []string
 	TokenEndpointAuthMethod        string
 	ApplicationType                string
 	AccessTokenType                string

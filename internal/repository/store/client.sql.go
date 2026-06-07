@@ -7,8 +7,6 @@ package store
 
 import (
 	"context"
-
-	"github.com/tuanta7/ciam/pkg/sqlx"
 )
 
 const createClient = `-- name: CreateClient :one
@@ -46,12 +44,12 @@ type CreateClientParams struct {
 	Name                           string
 	Description                    string
 	Secret                         string
-	Scope                          sqlx.StringArray
-	RedirectUris                   sqlx.StringArray
-	PostLogoutRedirectUris         sqlx.StringArray
-	GrantTypes                     sqlx.StringArray
-	ResponseTypes                  sqlx.StringArray
-	Audience                       sqlx.StringArray
+	Scope                          []string
+	RedirectUris                   []string
+	PostLogoutRedirectUris         []string
+	GrantTypes                     []string
+	ResponseTypes                  []string
+	Audience                       []string
 	TokenEndpointAuthMethod        string
 	ApplicationType                string
 	AccessTokenType                string
@@ -240,12 +238,12 @@ RETURNING id, name, description, secret, scope, redirect_uris, post_logout_redir
 type UpdateClientParams struct {
 	Name                           string
 	Description                    string
-	Scope                          sqlx.StringArray
-	RedirectUris                   sqlx.StringArray
-	PostLogoutRedirectUris         sqlx.StringArray
-	GrantTypes                     sqlx.StringArray
-	ResponseTypes                  sqlx.StringArray
-	Audience                       sqlx.StringArray
+	Scope                          []string
+	RedirectUris                   []string
+	PostLogoutRedirectUris         []string
+	GrantTypes                     []string
+	ResponseTypes                  []string
+	Audience                       []string
 	TokenEndpointAuthMethod        string
 	ApplicationType                string
 	AccessTokenType                string
