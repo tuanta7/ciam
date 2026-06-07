@@ -7,7 +7,7 @@
 ## OAuth2 RFCs Tracker
 
 RFC 6749 (OAuth 2.0 Core) defines the base OAuth framework. Since its publication, the OAuth Working Group has released
-several companion specifications that extend and clarify the protocol — the complete list can be found [here](https://oauth.net/2/). 
+several companion specifications that extend and clarify the protocol. The complete list can be found [here](https://oauth.net/2/). 
 
 | RFC      | Name                                                            | Status        |
 |----------|-----------------------------------------------------------------|---------------|
