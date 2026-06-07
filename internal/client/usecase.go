@@ -33,30 +33,6 @@ func NewUseCase(repo Repository) *UseCase {
 	return &UseCase{repo: repo}
 }
 
-type CreateInput struct {
-	ID                             string   `json:"id,omitempty"`
-	Name                           string   `json:"name" validate:"required"`
-	Description                    string   `json:"description"`
-	Scopes                         []string `json:"scopes"`
-	RedirectURIs                   []string `json:"redirect_uris"`
-	PostLogoutRedirectURIs         []string `json:"post_logout_redirect_uris"`
-	GrantTypes                     []string `json:"grant_types"`
-	ResponseTypes                  []string `json:"response_types"`
-	Audiences                      []string `json:"audiences"`
-	TokenEndpointAuthMethod        string   `json:"token_endpoint_auth_method"`
-	ApplicationType                string   `json:"application_type"`
-	AccessTokenType                string   `json:"access_token_type"`
-	LoginURL                       string   `json:"login_url"`
-	IDTokenLifetimeSeconds         int32    `json:"id_token_lifetime_seconds"`
-	DevMode                        bool     `json:"dev_mode"`
-	ClockSkewSeconds               int32    `json:"clock_skew_seconds"`
-	IDTokenUserinfoClaimsAssertion bool     `json:"id_token_userinfo_claims_assertion"`
-	CreatedBy                      string   `json:"created_by"`
-	UpdatedBy                      string   `json:"updated_by"`
-}
-
-type UpdateInput = CreateInput
-
 func (uc *UseCase) List(ctx context.Context, page, pageSize int32) ([]*Client, error) {
 	if page < 1 {
 		page = 1
@@ -80,12 +56,26 @@ func (uc *UseCase) List(ctx context.Context, page, pageSize int32) ([]*Client, e
 	return clients, nil
 }
 
-func (uc *UseCase) Get(ctx context.Context, id string) (*Client, error) {
-	row, err := uc.repo.GetClient(ctx, id)
-	if err != nil {
-		return nil, mapNotFound(err)
-	}
-	return NewClientFromStore(row), nil
+type CreateInput struct {
+	ID                             string   `json:"id,omitempty"`
+	Name                           string   `json:"name" validate:"required"`
+	Description                    string   `json:"description"`
+	Scopes                         []string `json:"scopes"`
+	RedirectURIs                   []string `json:"redirect_uris"`
+	PostLogoutRedirectURIs         []string `json:"post_logout_redirect_uris"`
+	GrantTypes                     []string `json:"grant_types"`
+	ResponseTypes                  []string `json:"response_types"`
+	Audiences                      []string `json:"audiences"`
+	TokenEndpointAuthMethod        string   `json:"token_endpoint_auth_method"`
+	ApplicationType                string   `json:"application_type"`
+	AccessTokenType                string   `json:"access_token_type"`
+	LoginURL                       string   `json:"login_url"`
+	IDTokenLifetimeSeconds         int32    `json:"id_token_lifetime_seconds"`
+	DevMode                        bool     `json:"dev_mode"`
+	ClockSkewSeconds               int32    `json:"clock_skew_seconds"`
+	IDTokenUserinfoClaimsAssertion bool     `json:"id_token_userinfo_claims_assertion"`
+	CreatedBy                      string   `json:"created_by"`
+	UpdatedBy                      string   `json:"updated_by"`
 }
 
 func (uc *UseCase) Create(ctx context.Context, in CreateInput) (*Client, error) {
@@ -93,7 +83,7 @@ func (uc *UseCase) Create(ctx context.Context, in CreateInput) (*Client, error) 
 		return nil, err
 	}
 
-	in.normalizeInput()
+	in.normalize()
 
 	row, err := uc.repo.CreateClient(ctx, store.CreateClientParams{
 		ID:                             in.ID,
@@ -124,12 +114,22 @@ func (uc *UseCase) Create(ctx context.Context, in CreateInput) (*Client, error) 
 	return NewClientFromStore(row), nil
 }
 
+func (uc *UseCase) Get(ctx context.Context, id string) (*Client, error) {
+	row, err := uc.repo.GetClient(ctx, id)
+	if err != nil {
+		return nil, mapNotFound(err)
+	}
+	return NewClientFromStore(row), nil
+}
+
+type UpdateInput = CreateInput
+
 func (uc *UseCase) Update(ctx context.Context, id string, in UpdateInput) (*Client, error) {
 	if err := in.validate(); err != nil {
 		return nil, err
 	}
 
-	in.normalizeInput()
+	in.normalize()
 	row, err := uc.repo.UpdateClient(ctx, store.UpdateClientParams{
 		ID:                             id,
 		Name:                           in.Name,
@@ -161,7 +161,7 @@ func (uc *UseCase) Delete(ctx context.Context, id string) error {
 	return uc.repo.DeleteClient(ctx, id)
 }
 
-func (in *CreateInput) normalizeInput() {
+func (in *CreateInput) normalize() {
 	if in.ID == "" {
 		in.ID = uuid.NewString()
 	}

@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/tuanta7/ciam/pkg/monitor"
+	"github.com/tuanta7/ciam/pkg/observability"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -91,7 +91,7 @@ func WithTrace(tracer trace.Tracer, next http.Handler) http.Handler {
 	})
 }
 
-func WithLog(logger *monitor.Logger, next http.Handler) http.Handler {
+func WithLog(logger *observability.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Request received",
 			zap.String("method", r.Method),
@@ -102,7 +102,7 @@ func WithLog(logger *monitor.Logger, next http.Handler) http.Handler {
 	})
 }
 
-func WithTelemetry(tracer trace.Tracer, logger *monitor.Logger, next http.Handler) http.Handler {
+func WithTelemetry(tracer trace.Tracer, logger *observability.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		WithLog(logger, WithTrace(tracer, WithMetric(next))).ServeHTTP(w, r)
 	})

@@ -5,14 +5,14 @@ import (
 	"log"
 	"os"
 
+	"github.com/tuanta7/ciam/internal/client"
 	"github.com/tuanta7/ciam/internal/config"
 	"github.com/tuanta7/ciam/internal/repository/postgres"
 	"github.com/tuanta7/ciam/internal/repository/store"
 	"github.com/tuanta7/ciam/internal/transport/rest"
 	"github.com/tuanta7/ciam/internal/transport/rest/handler"
-	"github.com/tuanta7/ciam/internal/usecase/client"
 	"github.com/tuanta7/ciam/pkg/graceful"
-	"github.com/tuanta7/ciam/pkg/monitor"
+	"github.com/tuanta7/ciam/pkg/observability"
 	"github.com/urfave/cli/v3"
 )
 
@@ -45,18 +45,18 @@ func main() {
 
 func initMonitor(ctx context.Context, cfg *config.Config) {
 	if !cfg.EnableMetrics {
-		monitor.InitNoopMeterProvider()
+		observability.InitNoopMeterProvider()
 	} else {
-		_, err := monitor.InitMeterProvider(ctx, cfg.ServiceName, nil)
+		_, err := observability.InitMeterProvider(ctx, cfg.ServiceName, nil)
 		if err != nil {
 			log.Fatalf("Failed to initialize meter provider: %v", err)
 		}
 	}
 
 	if !cfg.EnableTracing {
-		monitor.InitNoopTracerProvider()
+		observability.InitNoopTracerProvider()
 	} else {
-		_, err := monitor.InitTracerProvider(ctx, cfg.ServiceName, nil)
+		_, err := observability.InitTracerProvider(ctx, cfg.ServiceName, nil)
 		if err != nil {
 			log.Fatalf("Failed to initialize tracer provider: %v", err)
 		}

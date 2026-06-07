@@ -16,8 +16,8 @@ import (
 type Server struct {
 	server        *http.Server
 	router        chi.Router
-	clientHandler *handler.ClientHandler
 	meter         metric.Meter
+	clientHandler *handler.ClientHandler
 }
 
 func NewServer(

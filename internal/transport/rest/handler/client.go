@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/tuanta7/ciam/internal/client"
 	"github.com/tuanta7/ciam/internal/transport/rest/middleware"
-	"github.com/tuanta7/ciam/internal/usecase/client"
 	"github.com/tuanta7/ciam/pkg/httpx"
 )
 

@@ -22,7 +22,7 @@ type Client struct {
 	PostLogoutRedirectURIList     []string  `json:"post_logout_redirect_uris"`
 	GrantTypeList                 []string  `json:"grant_types"`
 	ResponseTypeList              []string  `json:"response_types"`
-	Audiences                     []string  `json:"audiences"`
+	AudienceList                  []string  `json:"audiences"`
 	TokenEndpointAuthMethod       string    `json:"token_endpoint_auth_method"`
 	ApplicationTypeName           string    `json:"application_type"`
 	AccessTokenTypeName           string    `json:"access_token_type"`
@@ -48,7 +48,7 @@ func NewClientFromStore(row store.Client) *Client {
 		PostLogoutRedirectURIList:     row.PostLogoutRedirectUris,
 		GrantTypeList:                 row.GrantTypes,
 		ResponseTypeList:              row.ResponseTypes,
-		Audiences:                     row.Audience,
+		AudienceList:                  row.Audience,
 		TokenEndpointAuthMethod:       row.TokenEndpointAuthMethod,
 		ApplicationTypeName:           row.ApplicationType,
 		AccessTokenTypeName:           row.AccessTokenType,
