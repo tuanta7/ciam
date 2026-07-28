@@ -37,14 +37,3 @@ sqlboiler-gen:
 mockery-gen:
 	echo "Generating mock implementations using mockery"
 	docker run --rm -v $(PWD):/src -w /src vektra/mockery:v3.7.0
-
-install-buf:
-	go install github.com/bufbuild/buf/cmd/buf@v${BUF_VERSION}
-
-buf-dev:
-	buf dep update
-	buf export buf.build/bufbuild/protovalidate --output=.
-
-buf-gen:
-	buf dep update
-	buf generate
