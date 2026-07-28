@@ -13,5 +13,5 @@ func (s *Storage) GetClientByClientID(ctx context.Context, clientID string) (op.
 		return nil, err
 	}
 
-	return oauth2client.NewClientFromStore(client), nil
+	return oauth2client.NewClientFromModel(client), nil
 }

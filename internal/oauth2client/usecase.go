@@ -2,12 +2,13 @@ package oauth2client
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
+	"github.com/aarondl/sqlboiler/v4/types"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
-	"github.com/tuanta7/ciam/internal/repository/store"
+	"github.com/tuanta7/ciam/internal/repository/models"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
@@ -18,10 +19,10 @@ var (
 )
 
 type Repository interface {
-	ListClients(ctx context.Context, arg store.ListClientsParams) ([]store.Client, error)
-	GetClient(ctx context.Context, id string) (store.Client, error)
-	CreateClient(ctx context.Context, arg store.CreateClientParams) (store.Client, error)
-	UpdateClient(ctx context.Context, arg store.UpdateClientParams) (store.Client, error)
+	ListClients(ctx context.Context, offset, limit int) (models.ClientSlice, error)
+	GetClient(ctx context.Context, id string) (*models.Client, error)
+	CreateClient(ctx context.Context, client *models.Client) error
+	UpdateClient(ctx context.Context, client *models.Client) error
 	DeleteClient(ctx context.Context, id string) error
 }
 
@@ -41,17 +42,14 @@ func (uc *UseCase) List(ctx context.Context, page, pageSize int32) ([]*Client, e
 		pageSize = 10
 	}
 
-	rows, err := uc.repo.ListClients(ctx, store.ListClientsParams{
-		Offset: (page - 1) * pageSize,
-		Limit:  pageSize,
-	})
+	rows, err := uc.repo.ListClients(ctx, int((page-1)*pageSize), int(pageSize))
 	if err != nil {
 		return nil, err
 	}
 
 	clients := make([]*Client, 0, len(rows))
 	for _, row := range rows {
-		clients = append(clients, NewClientFromStore(row))
+		clients = append(clients, NewClientFromModel(row))
 	}
 	return clients, nil
 }
@@ -85,33 +83,33 @@ func (uc *UseCase) Create(ctx context.Context, in CreateInput) (*Client, error) 
 
 	in.normalize()
 
-	row, err := uc.repo.CreateClient(ctx, store.CreateClientParams{
+	client := &models.Client{
 		ID:                             in.ID,
 		Name:                           in.Name,
 		Description:                    in.Description,
 		Secret:                         "",
-		Scope:                          in.Scopes,
-		RedirectUris:                   in.RedirectURIs,
-		PostLogoutRedirectUris:         in.PostLogoutRedirectURIs,
-		GrantTypes:                     in.GrantTypes,
-		ResponseTypes:                  in.ResponseTypes,
-		Audience:                       in.Audiences,
+		Scope:                          types.StringArray(in.Scopes),
+		RedirectUris:                   types.StringArray(in.RedirectURIs),
+		PostLogoutRedirectUris:         types.StringArray(in.PostLogoutRedirectURIs),
+		GrantTypes:                     types.StringArray(in.GrantTypes),
+		ResponseTypes:                  types.StringArray(in.ResponseTypes),
+		Audience:                       types.StringArray(in.Audiences),
 		TokenEndpointAuthMethod:        in.TokenEndpointAuthMethod,
 		ApplicationType:                in.ApplicationType,
 		AccessTokenType:                in.AccessTokenType,
-		LoginUrl:                       in.LoginURL,
-		IDTokenLifetimeSeconds:         in.IDTokenLifetimeSeconds,
+		LoginURL:                       in.LoginURL,
+		IDTokenLifetimeSeconds:         int(in.IDTokenLifetimeSeconds),
 		DevMode:                        in.DevMode,
-		ClockSkewSeconds:               in.ClockSkewSeconds,
+		ClockSkewSeconds:               int(in.ClockSkewSeconds),
 		IDTokenUserinfoClaimsAssertion: in.IDTokenUserinfoClaimsAssertion,
 		CreatedBy:                      in.CreatedBy,
 		UpdatedBy:                      in.UpdatedBy,
-	})
-	if err != nil {
+	}
+	if err := uc.repo.CreateClient(ctx, client); err != nil {
 		return nil, err
 	}
 
-	return NewClientFromStore(row), nil
+	return NewClientFromModel(client), nil
 }
 
 func (uc *UseCase) Get(ctx context.Context, id string) (*Client, error) {
@@ -119,7 +117,7 @@ func (uc *UseCase) Get(ctx context.Context, id string) (*Client, error) {
 	if err != nil {
 		return nil, mapNotFound(err)
 	}
-	return NewClientFromStore(row), nil
+	return NewClientFromModel(row), nil
 }
 
 type UpdateInput = CreateInput
@@ -130,31 +128,31 @@ func (uc *UseCase) Update(ctx context.Context, id string, in UpdateInput) (*Clie
 	}
 
 	in.normalize()
-	row, err := uc.repo.UpdateClient(ctx, store.UpdateClientParams{
+	client := &models.Client{
 		ID:                             id,
 		Name:                           in.Name,
 		Description:                    in.Description,
-		Scope:                          in.Scopes,
-		RedirectUris:                   in.RedirectURIs,
-		PostLogoutRedirectUris:         in.PostLogoutRedirectURIs,
-		GrantTypes:                     in.GrantTypes,
-		ResponseTypes:                  in.ResponseTypes,
-		Audience:                       in.Audiences,
+		Scope:                          types.StringArray(in.Scopes),
+		RedirectUris:                   types.StringArray(in.RedirectURIs),
+		PostLogoutRedirectUris:         types.StringArray(in.PostLogoutRedirectURIs),
+		GrantTypes:                     types.StringArray(in.GrantTypes),
+		ResponseTypes:                  types.StringArray(in.ResponseTypes),
+		Audience:                       types.StringArray(in.Audiences),
 		TokenEndpointAuthMethod:        in.TokenEndpointAuthMethod,
 		ApplicationType:                in.ApplicationType,
 		AccessTokenType:                in.AccessTokenType,
-		LoginUrl:                       in.LoginURL,
-		IDTokenLifetimeSeconds:         in.IDTokenLifetimeSeconds,
+		LoginURL:                       in.LoginURL,
+		IDTokenLifetimeSeconds:         int(in.IDTokenLifetimeSeconds),
 		DevMode:                        in.DevMode,
-		ClockSkewSeconds:               in.ClockSkewSeconds,
+		ClockSkewSeconds:               int(in.ClockSkewSeconds),
 		IDTokenUserinfoClaimsAssertion: in.IDTokenUserinfoClaimsAssertion,
 		UpdatedBy:                      in.UpdatedBy,
-	})
-	if err != nil {
+	}
+	if err := uc.repo.UpdateClient(ctx, client); err != nil {
 		return nil, mapNotFound(err)
 	}
 
-	return NewClientFromStore(row), nil
+	return NewClientFromModel(client), nil
 }
 
 func (uc *UseCase) Delete(ctx context.Context, id string) error {
@@ -164,6 +162,18 @@ func (uc *UseCase) Delete(ctx context.Context, id string) error {
 func (in *CreateInput) normalize() {
 	if in.ID == "" {
 		in.ID = uuid.NewString()
+	}
+
+	if in.RedirectURIs == nil {
+		in.RedirectURIs = []string{}
+	}
+
+	if in.PostLogoutRedirectURIs == nil {
+		in.PostLogoutRedirectURIs = []string{}
+	}
+
+	if in.Audiences == nil {
+		in.Audiences = []string{}
 	}
 
 	if len(in.Scopes) == 0 {
@@ -212,7 +222,7 @@ func (in *CreateInput) validate() error {
 }
 
 func mapNotFound(err error) error {
-	if errors.Is(err, pgx.ErrNoRows) {
+	if errors.Is(err, sql.ErrNoRows) {
 		return ErrNotFound
 	}
 	return err

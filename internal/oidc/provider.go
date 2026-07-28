@@ -9,12 +9,12 @@ type Provider struct {
 	*op.Provider
 }
 
-func NewProvider() (*Provider, error) {
+func NewProvider(clientRepo storage.ClientRepository) (*Provider, error) {
 	provider, err := op.NewProvider(
 		&op.Config{
 			CryptoKey: getCryptoKey(),
 		},
-		storage.NewStorage(),
+		storage.NewStorage(clientRepo),
 		op.StaticIssuer("ciam"),
 	)
 	if err != nil {

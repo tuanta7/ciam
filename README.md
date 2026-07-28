@@ -18,7 +18,7 @@ several companion specifications that extend and clarify the protocol. The compl
 | RFC 9068 | JWT Profile for OAuth Access Tokens                             | ⏳ Development |
 | RFC 7009 | OAuth 2.0 Token Revocation                                      | ⏳ Development |
 | RFC 8252 | OAuth 2.0 for Mobile and Native Apps                            | ⏳ Development |
-| RFC 8693 | OAuth 2.0 Token Exchange                                        | Todo          |
+| RFC 8693 | OAuth 2.0 Token Exchange                                        | ⏳ Development |
 | RFC 9126 | Pushed Authorization Requests (PAR)                             | Todo          |
 | RFC 7521 | Assertion Framework for OAuth 2.0 Client AuthN and AuthZ Grants | Todo          |
 | RFC 7523 | JWT Profile for OAuth 2.0 Client AuthN and AuthZ Grants         | Todo          |

@@ -5,7 +5,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/tuanta7/ciam/internal/repository/store"
+	"github.com/tuanta7/ciam/internal/repository/models"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
@@ -37,7 +37,7 @@ type Client struct {
 	UpdatedAt                     time.Time `json:"updated_at"`
 }
 
-func NewClientFromStore(row store.Client) *Client {
+func NewClientFromModel(row *models.Client) *Client {
 	return &Client{
 		ID:                            row.ID,
 		Name:                          row.Name,
@@ -52,15 +52,15 @@ func NewClientFromStore(row store.Client) *Client {
 		TokenEndpointAuthMethod:       row.TokenEndpointAuthMethod,
 		ApplicationTypeName:           row.ApplicationType,
 		AccessTokenTypeName:           row.AccessTokenType,
-		LoginURLTemplate:              row.LoginUrl,
-		IDTokenLifetimeSeconds:        row.IDTokenLifetimeSeconds,
+		LoginURLTemplate:              row.LoginURL,
+		IDTokenLifetimeSeconds:        int32(row.IDTokenLifetimeSeconds),
 		DevModeEnabled:                row.DevMode,
-		ClockSkewSeconds:              row.ClockSkewSeconds,
+		ClockSkewSeconds:              int32(row.ClockSkewSeconds),
 		IDTokenUserinfoClaimsAsserted: row.IDTokenUserinfoClaimsAssertion,
 		CreatedBy:                     row.CreatedBy,
 		UpdatedBy:                     row.UpdatedBy,
-		CreatedAt:                     row.CreatedAt.Time,
-		UpdatedAt:                     row.UpdatedAt.Time,
+		CreatedAt:                     row.CreatedAt,
+		UpdatedAt:                     row.UpdatedAt,
 	}
 }
 
@@ -114,8 +114,10 @@ func (c *Client) LoginURL(id string) string {
 func (c *Client) AccessTokenType() op.AccessTokenType {
 	tokenType, err := op.AccessTokenTypeString(c.AccessTokenTypeName)
 	if err != nil {
+		// default to opaque token
 		return op.AccessTokenTypeBearer
 	}
+
 	return tokenType
 }
 

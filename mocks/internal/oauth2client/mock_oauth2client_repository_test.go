@@ -2,13 +2,13 @@
 // github.com/vektra/mockery
 // template: testify
 
-package mockclient
+package mockoauth2client
 
 import (
 	"context"
 
 	mock "github.com/stretchr/testify/mock"
-	"github.com/tuanta7/ciam/internal/repository/store"
+	"github.com/tuanta7/ciam/internal/repository/models"
 )
 
 // NewMockRepository creates a new instance of MockRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
@@ -39,29 +39,20 @@ func (_m *MockRepository) EXPECT() *MockRepository_Expecter {
 }
 
 // CreateClient provides a mock function for the type MockRepository
-func (_mock *MockRepository) CreateClient(ctx context.Context, arg store.CreateClientParams) (store.Client, error) {
-	ret := _mock.Called(ctx, arg)
+func (_mock *MockRepository) CreateClient(ctx context.Context, client *models.Client) error {
+	ret := _mock.Called(ctx, client)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateClient")
 	}
 
-	var r0 store.Client
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, store.CreateClientParams) (store.Client, error)); ok {
-		return returnFunc(ctx, arg)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, store.CreateClientParams) store.Client); ok {
-		r0 = returnFunc(ctx, arg)
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *models.Client) error); ok {
+		r0 = returnFunc(ctx, client)
 	} else {
-		r0 = ret.Get(0).(store.Client)
+		r0 = ret.Error(0)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, store.CreateClientParams) error); ok {
-		r1 = returnFunc(ctx, arg)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
+	return r0
 }
 
 // MockRepository_CreateClient_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateClient'
@@ -71,20 +62,20 @@ type MockRepository_CreateClient_Call struct {
 
 // CreateClient is a helper method to define mock.On call
 //   - ctx context.Context
-//   - arg store.CreateClientParams
-func (_e *MockRepository_Expecter) CreateClient(ctx interface{}, arg interface{}) *MockRepository_CreateClient_Call {
-	return &MockRepository_CreateClient_Call{Call: _e.mock.On("CreateClient", ctx, arg)}
+//   - client *models.Client
+func (_e *MockRepository_Expecter) CreateClient(ctx interface{}, client interface{}) *MockRepository_CreateClient_Call {
+	return &MockRepository_CreateClient_Call{Call: _e.mock.On("CreateClient", ctx, client)}
 }
 
-func (_c *MockRepository_CreateClient_Call) Run(run func(ctx context.Context, arg store.CreateClientParams)) *MockRepository_CreateClient_Call {
+func (_c *MockRepository_CreateClient_Call) Run(run func(ctx context.Context, client *models.Client)) *MockRepository_CreateClient_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 store.CreateClientParams
+		var arg1 *models.Client
 		if args[1] != nil {
-			arg1 = args[1].(store.CreateClientParams)
+			arg1 = args[1].(*models.Client)
 		}
 		run(
 			arg0,
@@ -94,12 +85,12 @@ func (_c *MockRepository_CreateClient_Call) Run(run func(ctx context.Context, ar
 	return _c
 }
 
-func (_c *MockRepository_CreateClient_Call) Return(client store.Client, err error) *MockRepository_CreateClient_Call {
-	_c.Call.Return(client, err)
+func (_c *MockRepository_CreateClient_Call) Return(err error) *MockRepository_CreateClient_Call {
+	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *MockRepository_CreateClient_Call) RunAndReturn(run func(ctx context.Context, arg store.CreateClientParams) (store.Client, error)) *MockRepository_CreateClient_Call {
+func (_c *MockRepository_CreateClient_Call) RunAndReturn(run func(ctx context.Context, client *models.Client) error) *MockRepository_CreateClient_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -162,22 +153,24 @@ func (_c *MockRepository_DeleteClient_Call) RunAndReturn(run func(ctx context.Co
 }
 
 // GetClient provides a mock function for the type MockRepository
-func (_mock *MockRepository) GetClient(ctx context.Context, id string) (store.Client, error) {
+func (_mock *MockRepository) GetClient(ctx context.Context, id string) (*models.Client, error) {
 	ret := _mock.Called(ctx, id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetClient")
 	}
 
-	var r0 store.Client
+	var r0 *models.Client
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (store.Client, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*models.Client, error)); ok {
 		return returnFunc(ctx, id)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) store.Client); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *models.Client); ok {
 		r0 = returnFunc(ctx, id)
 	} else {
-		r0 = ret.Get(0).(store.Client)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*models.Client)
+		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = returnFunc(ctx, id)
@@ -217,38 +210,38 @@ func (_c *MockRepository_GetClient_Call) Run(run func(ctx context.Context, id st
 	return _c
 }
 
-func (_c *MockRepository_GetClient_Call) Return(client store.Client, err error) *MockRepository_GetClient_Call {
+func (_c *MockRepository_GetClient_Call) Return(client *models.Client, err error) *MockRepository_GetClient_Call {
 	_c.Call.Return(client, err)
 	return _c
 }
 
-func (_c *MockRepository_GetClient_Call) RunAndReturn(run func(ctx context.Context, id string) (store.Client, error)) *MockRepository_GetClient_Call {
+func (_c *MockRepository_GetClient_Call) RunAndReturn(run func(ctx context.Context, id string) (*models.Client, error)) *MockRepository_GetClient_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ListClients provides a mock function for the type MockRepository
-func (_mock *MockRepository) ListClients(ctx context.Context, arg store.ListClientsParams) ([]store.Client, error) {
-	ret := _mock.Called(ctx, arg)
+func (_mock *MockRepository) ListClients(ctx context.Context, offset int, limit int) (models.ClientSlice, error) {
+	ret := _mock.Called(ctx, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListClients")
 	}
 
-	var r0 []store.Client
+	var r0 models.ClientSlice
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, store.ListClientsParams) ([]store.Client, error)); ok {
-		return returnFunc(ctx, arg)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, int) (models.ClientSlice, error)); ok {
+		return returnFunc(ctx, offset, limit)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, store.ListClientsParams) []store.Client); ok {
-		r0 = returnFunc(ctx, arg)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int, int) models.ClientSlice); ok {
+		r0 = returnFunc(ctx, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]store.Client)
+			r0 = ret.Get(0).(models.ClientSlice)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, store.ListClientsParams) error); ok {
-		r1 = returnFunc(ctx, arg)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int, int) error); ok {
+		r1 = returnFunc(ctx, offset, limit)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -262,63 +255,60 @@ type MockRepository_ListClients_Call struct {
 
 // ListClients is a helper method to define mock.On call
 //   - ctx context.Context
-//   - arg store.ListClientsParams
-func (_e *MockRepository_Expecter) ListClients(ctx interface{}, arg interface{}) *MockRepository_ListClients_Call {
-	return &MockRepository_ListClients_Call{Call: _e.mock.On("ListClients", ctx, arg)}
+//   - offset int
+//   - limit int
+func (_e *MockRepository_Expecter) ListClients(ctx interface{}, offset interface{}, limit interface{}) *MockRepository_ListClients_Call {
+	return &MockRepository_ListClients_Call{Call: _e.mock.On("ListClients", ctx, offset, limit)}
 }
 
-func (_c *MockRepository_ListClients_Call) Run(run func(ctx context.Context, arg store.ListClientsParams)) *MockRepository_ListClients_Call {
+func (_c *MockRepository_ListClients_Call) Run(run func(ctx context.Context, offset int, limit int)) *MockRepository_ListClients_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 store.ListClientsParams
+		var arg1 int
 		if args[1] != nil {
-			arg1 = args[1].(store.ListClientsParams)
+			arg1 = args[1].(int)
+		}
+		var arg2 int
+		if args[2] != nil {
+			arg2 = args[2].(int)
 		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
 }
 
-func (_c *MockRepository_ListClients_Call) Return(clients []store.Client, err error) *MockRepository_ListClients_Call {
-	_c.Call.Return(clients, err)
+func (_c *MockRepository_ListClients_Call) Return(clientSlice models.ClientSlice, err error) *MockRepository_ListClients_Call {
+	_c.Call.Return(clientSlice, err)
 	return _c
 }
 
-func (_c *MockRepository_ListClients_Call) RunAndReturn(run func(ctx context.Context, arg store.ListClientsParams) ([]store.Client, error)) *MockRepository_ListClients_Call {
+func (_c *MockRepository_ListClients_Call) RunAndReturn(run func(ctx context.Context, offset int, limit int) (models.ClientSlice, error)) *MockRepository_ListClients_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // UpdateClient provides a mock function for the type MockRepository
-func (_mock *MockRepository) UpdateClient(ctx context.Context, arg store.UpdateClientParams) (store.Client, error) {
-	ret := _mock.Called(ctx, arg)
+func (_mock *MockRepository) UpdateClient(ctx context.Context, client *models.Client) error {
+	ret := _mock.Called(ctx, client)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateClient")
 	}
 
-	var r0 store.Client
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, store.UpdateClientParams) (store.Client, error)); ok {
-		return returnFunc(ctx, arg)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, store.UpdateClientParams) store.Client); ok {
-		r0 = returnFunc(ctx, arg)
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *models.Client) error); ok {
+		r0 = returnFunc(ctx, client)
 	} else {
-		r0 = ret.Get(0).(store.Client)
+		r0 = ret.Error(0)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, store.UpdateClientParams) error); ok {
-		r1 = returnFunc(ctx, arg)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
+	return r0
 }
 
 // MockRepository_UpdateClient_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateClient'
@@ -328,20 +318,20 @@ type MockRepository_UpdateClient_Call struct {
 
 // UpdateClient is a helper method to define mock.On call
 //   - ctx context.Context
-//   - arg store.UpdateClientParams
-func (_e *MockRepository_Expecter) UpdateClient(ctx interface{}, arg interface{}) *MockRepository_UpdateClient_Call {
-	return &MockRepository_UpdateClient_Call{Call: _e.mock.On("UpdateClient", ctx, arg)}
+//   - client *models.Client
+func (_e *MockRepository_Expecter) UpdateClient(ctx interface{}, client interface{}) *MockRepository_UpdateClient_Call {
+	return &MockRepository_UpdateClient_Call{Call: _e.mock.On("UpdateClient", ctx, client)}
 }
 
-func (_c *MockRepository_UpdateClient_Call) Run(run func(ctx context.Context, arg store.UpdateClientParams)) *MockRepository_UpdateClient_Call {
+func (_c *MockRepository_UpdateClient_Call) Run(run func(ctx context.Context, client *models.Client)) *MockRepository_UpdateClient_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 store.UpdateClientParams
+		var arg1 *models.Client
 		if args[1] != nil {
-			arg1 = args[1].(store.UpdateClientParams)
+			arg1 = args[1].(*models.Client)
 		}
 		run(
 			arg0,
@@ -351,12 +341,12 @@ func (_c *MockRepository_UpdateClient_Call) Run(run func(ctx context.Context, ar
 	return _c
 }
 
-func (_c *MockRepository_UpdateClient_Call) Return(client store.Client, err error) *MockRepository_UpdateClient_Call {
-	_c.Call.Return(client, err)
+func (_c *MockRepository_UpdateClient_Call) Return(err error) *MockRepository_UpdateClient_Call {
+	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *MockRepository_UpdateClient_Call) RunAndReturn(run func(ctx context.Context, arg store.UpdateClientParams) (store.Client, error)) *MockRepository_UpdateClient_Call {
+func (_c *MockRepository_UpdateClient_Call) RunAndReturn(run func(ctx context.Context, client *models.Client) error) *MockRepository_UpdateClient_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -3,11 +3,8 @@ MIGRATIONS_FOLDER=./data/migrations
 PROTO_FOLDER=protobuf/proto
 BUF_VERSION?=1.58.0
 
-build:
-	CGO_ENABLED=0 GOOS=linux go build -o hydros .
-
-create-client:
-	./hydros create-client
+build-oidc:
+	CGO_ENABLED=0 GOOS=linux go build -o ciam ./cmd/oidc
 
 env-example:
 	awk -F'=' 'BEGIN {OFS="="} \
@@ -15,13 +12,6 @@ env-example:
     	/^[[:space:]]*$$/ {print ""; next} \
     	NF>=1 {gsub(/^[[:space:]]+|[[:space:]]+$$/, "", $$1); print $$1"="}' .env > .env.example
 	echo ".env.example generated successfully."
-
-env-example-test:
-	awk -F'=' 'BEGIN {OFS="="} \
-    	/^[[:space:]]*#/ {print; next} \
-    	/^[[:space:]]*$$/ {print ""; next} \
-    	NF>=1 {gsub(/^[[:space:]]+|[[:space:]]+$$/, "", $$1); print $$1"="}' ./test/.env > ./test/.env.example
-	echo "./test/env.example generated successfully."
 
 install-goose:
 	go install github.com/pressly/goose/v3/cmd/goose@latest
@@ -36,9 +26,13 @@ migrate-up:
 migrate-down:
 	goose -env $(ENV_FILE) down
 
-sqlc-gen:
-	echo "Generating Go code from SQL queries using sqlc"
-	docker run --rm -v $(PWD):/src -w /src sqlc/sqlc:1.30.0 generate
+install-sqlboiler:
+	go install github.com/aarondl/sqlboiler/v4@latest
+	go install github.com/aarondl/sqlboiler/v4/drivers/sqlboiler-psql@latest
+
+sqlboiler-gen:
+	echo "Generating Go models from the database schema using sqlboiler"
+	sqlboiler psql -o internal/repository/models -p models --no-tests --wipe
 
 mockery-gen:
 	echo "Generating mock implementations using mockery"

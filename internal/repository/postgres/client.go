@@ -2,11 +2,10 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -14,26 +13,26 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// InstrumentedPool is a wrapper around pgxpool.Pool that instruments the pool.
-// It implements the store.DBTX interface.
-type InstrumentedPool struct {
-	pool   *pgxpool.Pool
+// InstrumentedDB wraps *sql.DB to instrument queries.
+// It implements boil.ContextExecutor for sqlboiler.
+type InstrumentedDB struct {
+	*sql.DB
 	tracer trace.Tracer
 	meter  metric.Meter
 }
 
-func NewInstrumentedPool(ctx context.Context, dsn string) (*InstrumentedPool, error) {
-	pgxPool, err := pgxpool.New(ctx, dsn)
+func NewInstrumentedPool(ctx context.Context, dsn string) (*InstrumentedDB, error) {
+	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := pgxPool.Ping(ctx); err != nil {
+	if err := db.PingContext(ctx); err != nil {
 		return nil, err
 	}
 
-	p := &InstrumentedPool{
-		pool:   pgxPool,
+	p := &InstrumentedDB{
+		DB:     db,
 		tracer: otel.Tracer("postgres_tracer"),
 		meter:  otel.Meter("postgres_meter"),
 	}
@@ -42,35 +41,35 @@ func NewInstrumentedPool(ctx context.Context, dsn string) (*InstrumentedPool, er
 	return p, err
 }
 
-func (p *InstrumentedPool) Close() {
-	p.pool.Close()
+func (p *InstrumentedDB) Close() {
+	p.DB.Close()
 }
 
-func (p *InstrumentedPool) Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error) {
+func (p *InstrumentedDB) ExecContext(ctx context.Context, sqlQuery string, args ...any) (sql.Result, error) {
 	ctx, span := p.tracer.Start(ctx, "postgres_exec", trace.WithAttributes(
 		semconv.DBSystemNamePostgreSQL,
-		semconv.DBQueryText(sql),
+		semconv.DBQueryText(sqlQuery),
 	))
 	defer span.End()
 
-	commandTag, err := p.pool.Exec(ctx, sql, arguments...)
+	result, err := p.DB.ExecContext(ctx, sqlQuery, args...)
 	if err != nil {
 		span.RecordError(err)
-		return commandTag, err
+		return result, err
 	}
 
-	return commandTag, nil
+	return result, nil
 }
 
-func (p *InstrumentedPool) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
+func (p *InstrumentedDB) QueryContext(ctx context.Context, sqlQuery string, args ...any) (*sql.Rows, error) {
 	start := time.Now()
 	ctx, span := p.tracer.Start(ctx, "postgres_query", trace.WithAttributes(
 		semconv.DBSystemNamePostgreSQL,
-		semconv.DBQueryText(sql),
+		semconv.DBQueryText(sqlQuery),
 	))
 	defer span.End()
 
-	rows, err := p.pool.Query(ctx, sql, args...)
+	rows, err := p.DB.QueryContext(ctx, sqlQuery, args...)
 	if err != nil {
 		span.RecordError(err)
 		return nil, err
@@ -83,19 +82,37 @@ func (p *InstrumentedPool) Query(ctx context.Context, sql string, args ...any) (
 	return rows, err
 }
 
-func (p *InstrumentedPool) QueryRow(ctx context.Context, sql string, args ...any) pgx.Row {
+func (p *InstrumentedDB) QueryRowContext(ctx context.Context, sqlQuery string, args ...any) *sql.Row {
 	start := time.Now()
 	ctx, span := p.tracer.Start(ctx, "postgres_query_row", trace.WithAttributes(
 		semconv.DBSystemNamePostgreSQL,
-		semconv.DBQueryText(sql),
+		semconv.DBQueryText(sqlQuery),
 	))
 	defer span.End()
 
-	row := p.pool.QueryRow(ctx, sql, args...)
+	row := p.DB.QueryRowContext(ctx, sqlQuery, args...)
 
 	queryDuration.Record(ctx, time.Since(start).Seconds(), metric.WithAttributes(
 		attribute.String("db.operation", "query_row"),
 	))
 
 	return row
+}
+
+var (
+	queryDuration metric.Float64Histogram
+)
+
+func initMetrics(meter metric.Meter) error {
+	var err error
+
+	queryDuration, err = meter.Float64Histogram("db.client.operation.duration",
+		metric.WithDescription("Duration of database operations"),
+		metric.WithUnit("s"),
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
