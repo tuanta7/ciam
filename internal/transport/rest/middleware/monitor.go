@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/tuanta7/ciam/pkg/o11y"
@@ -10,7 +11,6 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	semconv "go.opentelemetry.io/otel/semconv/v1.39.0"
 	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
 )
 
 var (
@@ -94,8 +94,8 @@ func WithTrace(tracer trace.Tracer, next http.Handler) http.Handler {
 func WithLog(logger *o11y.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Request received",
-			zap.String("method", r.Method),
-			zap.String("path", r.URL.Path),
+			slog.String("method", r.Method),
+			slog.String("path", r.URL.Path),
 		)
 
 		next.ServeHTTP(w, r)

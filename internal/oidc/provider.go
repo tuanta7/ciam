@@ -2,6 +2,7 @@ package oidc
 
 import (
 	"github.com/tuanta7/ciam/internal/oidc/storage"
+	"github.com/tuanta7/ciam/pkg/o11y"
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
 
@@ -18,6 +19,7 @@ func NewProvider(
 		},
 		storage.NewStorage(clientRepo),
 		op.StaticIssuer("ciam"),
+		op.WithLogger(o11y.NewLogger("ciam").Logger),
 	)
 	if err != nil {
 		return nil, err
@@ -29,5 +31,10 @@ func NewProvider(
 }
 
 func getCryptoKey() [32]byte {
-	return [32]byte{}
+	temp := "secret_key_for_crypto_operations"
+
+	var key [32]byte
+	copy(key[:], temp)
+
+	return key
 }
