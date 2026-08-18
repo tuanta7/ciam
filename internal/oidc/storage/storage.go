@@ -3,21 +3,23 @@ package storage
 import (
 	"context"
 
-	"github.com/tuanta7/ciam/internal/repository/models"
+	"github.com/tuanta7/ciam/internal/oauth2client"
 )
 
 type ClientRepository interface {
-	GetClient(ctx context.Context, id string) (*models.Client, error)
+	GetClient(ctx context.Context, id string) (*oauth2client.Client, error)
 }
 
 // Storage implements the zitadel op.Storage interface
 type Storage struct {
-	clientRepo ClientRepository
+	client ClientRepository
 }
 
-func NewStorage(clientRepo ClientRepository) *Storage {
+func NewStorage(
+	client ClientRepository,
+) *Storage {
 	return &Storage{
-		clientRepo: clientRepo,
+		client: client,
 	}
 }
 

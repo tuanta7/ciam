@@ -1,8 +1,9 @@
-package postgres
+package oauth2client
 
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/aarondl/sqlboiler/v4/boil"
 	"github.com/aarondl/sqlboiler/v4/queries/qm"
@@ -14,19 +15,38 @@ type Repository struct {
 }
 
 func NewClientRepository(exec boil.ContextExecutor) *Repository {
-	return &Repository{exec: exec}
+	return &Repository{
+		exec: exec,
+	}
 }
 
-func (r *Repository) ListClients(ctx context.Context, offset, limit int) (models.ClientSlice, error) {
-	return models.Clients(
+func (r *Repository) ListClients(ctx context.Context, offset, limit int) ([]*Client, error) {
+	clients := make([]*Client, 0)
+
+	rows, err := models.Clients(
 		qm.OrderBy(models.ClientColumns.CreatedAt+" DESC"),
 		qm.Offset(offset),
 		qm.Limit(limit),
 	).All(ctx, r.exec)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, client := range rows {
+		clients = append(clients, NewFromRow(client))
+	}
+	return clients, nil
 }
 
-func (r *Repository) GetClient(ctx context.Context, id string) (*models.Client, error) {
-	return models.FindClient(ctx, r.exec, id)
+func (r *Repository) GetClient(ctx context.Context, id string) (*Client, error) {
+	row, err := models.FindClient(ctx, r.exec, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	} else if err != nil {
+		return nil, err
+	}
+
+	return NewFromRow(row), nil
 }
 
 func (r *Repository) CreateClient(ctx context.Context, client *models.Client) error {

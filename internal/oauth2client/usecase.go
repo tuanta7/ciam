@@ -18,19 +18,11 @@ var (
 	ErrInvalidClient = errors.New("invalid client")
 )
 
-type Repository interface {
-	ListClients(ctx context.Context, offset, limit int) (models.ClientSlice, error)
-	GetClient(ctx context.Context, id string) (*models.Client, error)
-	CreateClient(ctx context.Context, client *models.Client) error
-	UpdateClient(ctx context.Context, client *models.Client) error
-	DeleteClient(ctx context.Context, id string) error
-}
-
 type UseCase struct {
-	repo Repository
+	repo *Repository
 }
 
-func NewUseCase(repo Repository) *UseCase {
+func NewUseCase(repo *Repository) *UseCase {
 	return &UseCase{repo: repo}
 }
 
@@ -42,15 +34,11 @@ func (uc *UseCase) List(ctx context.Context, page, pageSize int32) ([]*Client, e
 		pageSize = 10
 	}
 
-	rows, err := uc.repo.ListClients(ctx, int((page-1)*pageSize), int(pageSize))
+	clients, err := uc.repo.ListClients(ctx, int((page-1)*pageSize), int(pageSize))
 	if err != nil {
 		return nil, err
 	}
 
-	clients := make([]*Client, 0, len(rows))
-	for _, row := range rows {
-		clients = append(clients, NewClientFromModel(row))
-	}
 	return clients, nil
 }
 
@@ -109,15 +97,15 @@ func (uc *UseCase) Create(ctx context.Context, in CreateInput) (*Client, error) 
 		return nil, err
 	}
 
-	return NewClientFromModel(client), nil
+	return NewFromRow(client), nil
 }
 
 func (uc *UseCase) Get(ctx context.Context, id string) (*Client, error) {
-	row, err := uc.repo.GetClient(ctx, id)
+	client, err := uc.repo.GetClient(ctx, id)
 	if err != nil {
 		return nil, mapNotFound(err)
 	}
-	return NewClientFromModel(row), nil
+	return client, nil
 }
 
 type UpdateInput = CreateInput
@@ -152,7 +140,7 @@ func (uc *UseCase) Update(ctx context.Context, id string, in UpdateInput) (*Clie
 		return nil, mapNotFound(err)
 	}
 
-	return NewClientFromModel(client), nil
+	return NewFromRow(client), nil
 }
 
 func (uc *UseCase) Delete(ctx context.Context, id string) error {

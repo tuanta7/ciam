@@ -3,20 +3,23 @@ package storage
 import (
 	"context"
 
-	"github.com/tuanta7/ciam/internal/oauth2client"
+	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
 
 func (s *Storage) GetClientByClientID(ctx context.Context, clientID string) (op.Client, error) {
-	client, err := s.clientRepo.GetClient(ctx, clientID)
-	if err != nil {
-		return nil, err
-	}
-
-	return oauth2client.NewClientFromModel(client), nil
+	return s.client.GetClient(ctx, clientID)
 }
 
 func (s *Storage) AuthorizeClientIDSecret(ctx context.Context, clientID, clientSecret string) error {
-	//TODO implement me
-	panic("implement me")
+	client, err := s.client.GetClient(ctx, clientID)
+	if err != nil {
+		return err
+	}
+
+	if client.Secret != clientSecret {
+		return oidc.ErrInvalidClient().WithDescription("invalid client secret")
+	}
+
+	return nil
 }

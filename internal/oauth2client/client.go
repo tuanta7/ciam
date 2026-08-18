@@ -37,33 +37,6 @@ type Client struct {
 	UpdatedAt                     time.Time `json:"updated_at"`
 }
 
-func NewClientFromModel(row *models.Client) *Client {
-	return &Client{
-		ID:                            row.ID,
-		Name:                          row.Name,
-		Description:                   row.Description,
-		Secret:                        row.Secret,
-		Scopes:                        row.Scope,
-		RedirectURIList:               row.RedirectUris,
-		PostLogoutRedirectURIList:     row.PostLogoutRedirectUris,
-		GrantTypeList:                 row.GrantTypes,
-		ResponseTypeList:              row.ResponseTypes,
-		AudienceList:                  row.Audience,
-		TokenEndpointAuthMethod:       row.TokenEndpointAuthMethod,
-		ApplicationTypeName:           row.ApplicationType,
-		AccessTokenTypeName:           row.AccessTokenType,
-		LoginURLTemplate:              row.LoginURL,
-		IDTokenLifetimeSeconds:        int32(row.IDTokenLifetimeSeconds),
-		DevModeEnabled:                row.DevMode,
-		ClockSkewSeconds:              int32(row.ClockSkewSeconds),
-		IDTokenUserinfoClaimsAsserted: row.IDTokenUserinfoClaimsAssertion,
-		CreatedBy:                     row.CreatedBy,
-		UpdatedBy:                     row.UpdatedBy,
-		CreatedAt:                     row.CreatedAt,
-		UpdatedAt:                     row.UpdatedAt,
-	}
-}
-
 func (c *Client) GetID() string {
 	return c.ID
 }
@@ -157,4 +130,31 @@ func (c *Client) restrictScopes(scopes []string) []string {
 		}
 	}
 	return allowed
+}
+
+func NewFromRow(row *models.Client) *Client {
+	return &Client{
+		ID:                            row.ID,
+		Name:                          row.Name,
+		Description:                   row.Description,
+		Secret:                        row.Secret,
+		Scopes:                        row.Scope,
+		RedirectURIList:               row.RedirectUris,
+		PostLogoutRedirectURIList:     row.PostLogoutRedirectUris,
+		GrantTypeList:                 row.GrantTypes,
+		ResponseTypeList:              row.ResponseTypes,
+		AudienceList:                  row.Audience,
+		TokenEndpointAuthMethod:       row.TokenEndpointAuthMethod,
+		ApplicationTypeName:           row.ApplicationType,
+		AccessTokenTypeName:           row.AccessTokenType,
+		LoginURLTemplate:              row.LoginURL,
+		IDTokenLifetimeSeconds:        int32(row.IDTokenLifetimeSeconds),
+		DevModeEnabled:                row.DevMode,
+		ClockSkewSeconds:              int32(row.ClockSkewSeconds),
+		IDTokenUserinfoClaimsAsserted: row.IDTokenUserinfoClaimsAssertion,
+		CreatedBy:                     row.CreatedBy,
+		UpdatedBy:                     row.UpdatedBy,
+		CreatedAt:                     row.CreatedAt,
+		UpdatedAt:                     row.UpdatedAt,
+	}
 }
