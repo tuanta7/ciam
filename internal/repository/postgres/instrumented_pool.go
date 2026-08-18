@@ -13,15 +13,15 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// InstrumentedDB wraps *sql.DB to instrument queries.
+// InstrumentedPool wraps *sql.DB to instrument queries.
 // It implements boil.ContextExecutor for sqlboiler.
-type InstrumentedDB struct {
+type InstrumentedPool struct {
 	*sql.DB
 	tracer trace.Tracer
 	meter  metric.Meter
 }
 
-func NewInstrumentedPool(ctx context.Context, dsn string) (*InstrumentedDB, error) {
+func NewInstrumentedPool(ctx context.Context, dsn string) (*InstrumentedPool, error) {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func NewInstrumentedPool(ctx context.Context, dsn string) (*InstrumentedDB, erro
 		return nil, err
 	}
 
-	p := &InstrumentedDB{
+	p := &InstrumentedPool{
 		DB:     db,
 		tracer: otel.Tracer("postgres_tracer"),
 		meter:  otel.Meter("postgres_meter"),
@@ -41,11 +41,11 @@ func NewInstrumentedPool(ctx context.Context, dsn string) (*InstrumentedDB, erro
 	return p, err
 }
 
-func (p *InstrumentedDB) Close() {
+func (p *InstrumentedPool) Close() {
 	p.DB.Close()
 }
 
-func (p *InstrumentedDB) ExecContext(ctx context.Context, sqlQuery string, args ...any) (sql.Result, error) {
+func (p *InstrumentedPool) ExecContext(ctx context.Context, sqlQuery string, args ...any) (sql.Result, error) {
 	ctx, span := p.tracer.Start(ctx, "postgres_exec", trace.WithAttributes(
 		semconv.DBSystemNamePostgreSQL,
 		semconv.DBQueryText(sqlQuery),
@@ -61,7 +61,7 @@ func (p *InstrumentedDB) ExecContext(ctx context.Context, sqlQuery string, args 
 	return result, nil
 }
 
-func (p *InstrumentedDB) QueryContext(ctx context.Context, sqlQuery string, args ...any) (*sql.Rows, error) {
+func (p *InstrumentedPool) QueryContext(ctx context.Context, sqlQuery string, args ...any) (*sql.Rows, error) {
 	start := time.Now()
 	ctx, span := p.tracer.Start(ctx, "postgres_query", trace.WithAttributes(
 		semconv.DBSystemNamePostgreSQL,
@@ -82,7 +82,7 @@ func (p *InstrumentedDB) QueryContext(ctx context.Context, sqlQuery string, args
 	return rows, err
 }
 
-func (p *InstrumentedDB) QueryRowContext(ctx context.Context, sqlQuery string, args ...any) *sql.Row {
+func (p *InstrumentedPool) QueryRowContext(ctx context.Context, sqlQuery string, args ...any) *sql.Row {
 	start := time.Now()
 	ctx, span := p.tracer.Start(ctx, "postgres_query_row", trace.WithAttributes(
 		semconv.DBSystemNamePostgreSQL,

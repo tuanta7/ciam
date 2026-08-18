@@ -16,11 +16,9 @@ type Storage struct {
 }
 
 func NewStorage(clientRepo ClientRepository) *Storage {
-	return &Storage{clientRepo: clientRepo}
-}
-
-func (s *Storage) GetClient(ctx context.Context, id string) (*models.Client, error) {
-	return s.clientRepo.GetClient(ctx, id)
+	return &Storage{
+		clientRepo: clientRepo,
+	}
 }
 
 func (s *Storage) Health(ctx context.Context) error {

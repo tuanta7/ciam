@@ -28,7 +28,7 @@ func (h *ClientHandler) ListClients(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = httpx.ResponseJSON(w, http.StatusOK, clients)
+	_ = httpx.WriteJSON(w, http.StatusOK, clients)
 }
 
 func (h *ClientHandler) GetClient(w http.ResponseWriter, r *http.Request) {
@@ -38,12 +38,12 @@ func (h *ClientHandler) GetClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = httpx.ResponseJSON(w, http.StatusOK, item)
+	_ = httpx.WriteJSON(w, http.StatusOK, item)
 }
 
 func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 	var input oauth2client.CreateInput
-	if err := httpx.DecodeAndValidateJSON(r.Body, &input); err != nil {
+	if err := httpx.ReadAndValidateJSON(r.Body, &input); err != nil {
 		_ = httpx.ErrorJSON(w, httpx.NewInvalidArgumentError(httpx.WithDescription(err.Error())))
 		return
 	}
@@ -54,12 +54,12 @@ func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = httpx.ResponseJSON(w, http.StatusCreated, item)
+	_ = httpx.WriteJSON(w, http.StatusCreated, item)
 }
 
 func (h *ClientHandler) UpdateClient(w http.ResponseWriter, r *http.Request) {
 	var input oauth2client.UpdateInput
-	if err := httpx.DecodeAndValidateJSON(r.Body, &input); err != nil {
+	if err := httpx.ReadAndValidateJSON(r.Body, &input); err != nil {
 		_ = httpx.ErrorJSON(w, httpx.NewInvalidArgumentError(httpx.WithDescription(err.Error())))
 		return
 	}
@@ -70,7 +70,7 @@ func (h *ClientHandler) UpdateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = httpx.ResponseJSON(w, http.StatusOK, item)
+	_ = httpx.WriteJSON(w, http.StatusOK, item)
 }
 
 func (h *ClientHandler) DeleteClient(w http.ResponseWriter, r *http.Request) {

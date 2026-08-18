@@ -8,10 +8,15 @@ import (
 )
 
 func (s *Storage) GetClientByClientID(ctx context.Context, clientID string) (op.Client, error) {
-	client, err := s.GetClient(ctx, clientID)
+	client, err := s.clientRepo.GetClient(ctx, clientID)
 	if err != nil {
 		return nil, err
 	}
 
 	return oauth2client.NewClientFromModel(client), nil
+}
+
+func (s *Storage) AuthorizeClientIDSecret(ctx context.Context, clientID, clientSecret string) error {
+	//TODO implement me
+	panic("implement me")
 }

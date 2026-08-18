@@ -31,8 +31,3 @@ func (s *Storage) DeleteAuthRequest(ctx context.Context, s2 string) error {
 	//TODO implement me
 	panic("implement me")
 }
-
-func (s *Storage) AuthorizeClientIDSecret(ctx context.Context, clientID, clientSecret string) error {
-	//TODO implement me
-	panic("implement me")
-}
