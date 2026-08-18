@@ -65,11 +65,10 @@ type CreateInput struct {
 }
 
 func (uc *UseCase) Create(ctx context.Context, in CreateInput) (*Client, error) {
+	in.normalize()
 	if err := in.validate(); err != nil {
 		return nil, err
 	}
-
-	in.normalize()
 
 	client := &models.Client{
 		ID:                             in.ID,
@@ -102,8 +101,10 @@ func (uc *UseCase) Create(ctx context.Context, in CreateInput) (*Client, error) 
 
 func (uc *UseCase) Get(ctx context.Context, id string) (*Client, error) {
 	client, err := uc.repo.GetClient(ctx, id)
-	if err != nil {
-		return nil, mapNotFound(err)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	} else if err != nil {
+		return nil, err
 	}
 	return client, nil
 }
@@ -111,11 +112,11 @@ func (uc *UseCase) Get(ctx context.Context, id string) (*Client, error) {
 type UpdateInput = CreateInput
 
 func (uc *UseCase) Update(ctx context.Context, id string, in UpdateInput) (*Client, error) {
+	in.normalize()
 	if err := in.validate(); err != nil {
 		return nil, err
 	}
 
-	in.normalize()
 	client := &models.Client{
 		ID:                             id,
 		Name:                           in.Name,
@@ -136,8 +137,12 @@ func (uc *UseCase) Update(ctx context.Context, id string, in UpdateInput) (*Clie
 		IDTokenUserinfoClaimsAssertion: in.IDTokenUserinfoClaimsAssertion,
 		UpdatedBy:                      in.UpdatedBy,
 	}
-	if err := uc.repo.UpdateClient(ctx, client); err != nil {
-		return nil, mapNotFound(err)
+
+	err := uc.repo.UpdateClient(ctx, client)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	} else if err != nil {
+		return nil, err
 	}
 
 	return NewFromRow(client), nil
@@ -207,11 +212,4 @@ func (in *CreateInput) validate() error {
 	}
 
 	return nil
-}
-
-func mapNotFound(err error) error {
-	if errors.Is(err, sql.ErrNoRows) {
-		return ErrNotFound
-	}
-	return err
 }

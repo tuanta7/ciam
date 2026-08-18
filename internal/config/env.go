@@ -7,7 +7,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-type Config struct {
+type EnvConfig struct {
 	ServiceName   string         `envconfig:"service_name" required:"true" default:"ciam"`
 	BindAddress   string         `envconfig:"bind_address" required:"true" default:":13702"`
 	EnableTracing bool           `envconfig:"enable_tracing" default:"false"`
@@ -21,12 +21,12 @@ type PostgresConfig struct {
 	MaxIdleConns int    `envconfig:"max_idle_conns" default:"2"`
 }
 
-func LoadConfig(envFiles ...string) *Config {
+func LoadConfig(envFiles ...string) *EnvConfig {
 	if err := godotenv.Load(envFiles...); err != nil {
 		log.Fatalf("no .env file found or error loading .env file: %v", err)
 	}
 
-	var cfg Config
+	var cfg EnvConfig
 	if err := envconfig.Process("CIAM", &cfg); err != nil {
 		log.Fatal(err.Error())
 	}

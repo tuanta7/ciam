@@ -8,7 +8,7 @@ import (
 	"github.com/tuanta7/ciam/pkg/o11y"
 )
 
-func initMonitor(ctx context.Context, cfg *config.Config) {
+func initMonitor(ctx context.Context, cfg *config.EnvConfig) {
 	if !cfg.EnableMetrics {
 		o11y.InitNoopMeterProvider()
 	} else {
