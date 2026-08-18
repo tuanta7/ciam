@@ -42,7 +42,7 @@ func WriteJSON(w http.ResponseWriter, code int, data any) error {
 	return err
 }
 
-func ErrorJSON(w http.ResponseWriter, err Error) error {
+func ErrorJSON(w http.ResponseWriter, err HTTPError) error {
 	return WriteJSON(w, err.Code, map[string]string{
 		"error": err.Error(),
 		"hint":  err.Hint,

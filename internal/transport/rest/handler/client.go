@@ -24,7 +24,7 @@ func (h *ClientHandler) ListClients(w http.ResponseWriter, r *http.Request) {
 	page, pageSize, _ := middleware.GetPaginationParams(r.Context())
 	clients, err := h.uc.List(r.Context(), page, pageSize)
 	if err != nil {
-		_ = httpx.ErrorJSON(w, httpx.NewInternalError(httpx.WithDescription(err.Error())))
+		_ = httpx.ErrorJSON(w, httpx.InternalError(httpx.WithDescription(err.Error())))
 		return
 	}
 
@@ -44,7 +44,7 @@ func (h *ClientHandler) GetClient(w http.ResponseWriter, r *http.Request) {
 func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 	var input oauth2client.CreateInput
 	if err := httpx.ReadAndValidateJSON(r.Body, &input); err != nil {
-		_ = httpx.ErrorJSON(w, httpx.NewInvalidArgumentError(httpx.WithDescription(err.Error())))
+		_ = httpx.ErrorJSON(w, httpx.InvalidArgumentError(httpx.WithDescription(err.Error())))
 		return
 	}
 
@@ -60,7 +60,7 @@ func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 func (h *ClientHandler) UpdateClient(w http.ResponseWriter, r *http.Request) {
 	var input oauth2client.UpdateInput
 	if err := httpx.ReadAndValidateJSON(r.Body, &input); err != nil {
-		_ = httpx.ErrorJSON(w, httpx.NewInvalidArgumentError(httpx.WithDescription(err.Error())))
+		_ = httpx.ErrorJSON(w, httpx.InvalidArgumentError(httpx.WithDescription(err.Error())))
 		return
 	}
 
@@ -85,10 +85,10 @@ func (h *ClientHandler) DeleteClient(w http.ResponseWriter, r *http.Request) {
 func (h *ClientHandler) writeError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, oauth2client.ErrNotFound):
-		_ = httpx.ErrorJSON(w, httpx.NewError(http.StatusNotFound, "not found", httpx.WithDescription(err.Error())))
+		_ = httpx.ErrorJSON(w, httpx.Error(http.StatusNotFound, "not found", httpx.WithDescription(err.Error())))
 	case errors.Is(err, oauth2client.ErrInvalidClient):
-		_ = httpx.ErrorJSON(w, httpx.NewInvalidArgumentError(httpx.WithDescription(err.Error())))
+		_ = httpx.ErrorJSON(w, httpx.InvalidArgumentError(httpx.WithDescription(err.Error())))
 	default:
-		_ = httpx.ErrorJSON(w, httpx.NewInternalError(httpx.WithDescription(err.Error())))
+		_ = httpx.ErrorJSON(w, httpx.InternalError(httpx.WithDescription(err.Error())))
 	}
 }

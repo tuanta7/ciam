@@ -38,7 +38,7 @@ func ValidateStruct(s any) error {
 				messages = append(messages, validateErrorMessage(e))
 			}
 
-			return Error{
+			return HTTPError{
 				Code:    http.StatusBadRequest,
 				Message: strings.Join(messages, "; "),
 			}
