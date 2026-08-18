@@ -21,7 +21,7 @@ type InstrumentedExecutor struct {
 	meter  metric.Meter
 }
 
-func NewInstrumentedPool(ctx context.Context, dsn string) (*InstrumentedExecutor, error) {
+func NewExecutor(ctx context.Context, dsn string) (*InstrumentedExecutor, error) {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, err

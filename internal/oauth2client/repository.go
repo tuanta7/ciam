@@ -14,7 +14,7 @@ type Repository struct {
 	exec boil.ContextExecutor
 }
 
-func NewClientRepository(exec boil.ContextExecutor) *Repository {
+func NewRepository(exec boil.ContextExecutor) *Repository {
 	return &Repository{
 		exec: exec,
 	}

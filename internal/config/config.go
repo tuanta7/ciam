@@ -27,7 +27,7 @@ func LoadConfig(envFiles ...string) *Config {
 	}
 
 	var cfg Config
-	if err := envconfig.Process("CHASING_PAPER", &cfg); err != nil {
+	if err := envconfig.Process("CIAM", &cfg); err != nil {
 		log.Fatal(err.Error())
 	}
 

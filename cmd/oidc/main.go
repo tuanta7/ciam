@@ -11,7 +11,6 @@ import (
 	"github.com/tuanta7/ciam/internal/transport/rest"
 	"github.com/tuanta7/ciam/internal/transport/rest/handler"
 	"github.com/tuanta7/ciam/pkg/graceful"
-	"github.com/tuanta7/ciam/pkg/o11y"
 	"github.com/urfave/cli/v3"
 )
 
@@ -22,13 +21,13 @@ func main() {
 			cfg := config.LoadConfig()
 			initMonitor(ctx, cfg)
 
-			pool, err := postgres.NewInstrumentedPool(ctx, cfg.Postgres.DSN)
+			executor, err := postgres.NewExecutor(ctx, cfg.Postgres.DSN)
 			if err != nil {
 				return err
 			}
-			defer pool.Close()
+			defer executor.Close()
 
-			clientRepo := postgres.NewClientRepository(pool)
+			clientRepo := oauth2client.NewRepository(executor)
 			clientUC := oauth2client.NewUseCase(clientRepo)
 			clientHandler := handler.NewClientHandler(clientUC)
 
@@ -39,25 +38,5 @@ func main() {
 
 	if err := cmd.Run(context.Background(), os.Args); err != nil {
 		log.Fatalf("Error: %v", err)
-	}
-}
-
-func initMonitor(ctx context.Context, cfg *config.Config) {
-	if !cfg.EnableMetrics {
-		o11y.InitNoopMeterProvider()
-	} else {
-		_, err := o11y.InitMeterProvider(ctx, cfg.ServiceName, nil)
-		if err != nil {
-			log.Fatalf("Failed to initialize meter provider: %v", err)
-		}
-	}
-
-	if !cfg.EnableTracing {
-		o11y.InitNoopTracerProvider()
-	} else {
-		_, err := o11y.InitTracerProvider(ctx, cfg.ServiceName, nil)
-		if err != nil {
-			log.Fatalf("Failed to initialize tracer provider: %v", err)
-		}
 	}
 }
