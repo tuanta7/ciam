@@ -1,0 +1,11 @@
+<!doctype html>
+<title>Sign in</title>
+<form method="post" action="/login">
+  <input type="hidden" name="auth_request_id" value="{{.AuthRequestID}}" />
+  {{if .Error}}
+  <p>{{.Error}}</p>
+  {{end}}
+  <p><input name="email" type="email" placeholder="Email" value="{{.Email}}" autofocus required /></p>
+  <p><input name="password" type="password" placeholder="Password" required /></p>
+  <button type="submit">Sign in</button>
+</form>

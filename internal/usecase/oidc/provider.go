@@ -1,18 +1,24 @@
-package op
+package oidc
 
 import (
+	"crypto/sha256"
 	"strings"
 
 	"github.com/rs/cors"
+	"github.com/tuanta7/ciam/internal/usecase/oidc/storage"
 	"github.com/tuanta7/ciam/pkg/otelx"
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
 
 type Provider struct {
 	*op.Provider
+
+	// Store is the auth request storage, needed by the login UI to complete a
+	// request once the user has been authenticated.
+	Store *storage.Storage
 }
 
-func NewProvider(issuer string, clientRepo ClientUC) (*Provider, error) {
+func NewProvider(issuer, cryptoKey string, clientUC storage.ClientUC) (*Provider, error) {
 	opts := []op.Option{
 		op.WithCORSOptions(&cors.Options{}),
 		op.WithLogger(otelx.NewLogger("ciam").Logger),
@@ -22,11 +28,13 @@ func NewProvider(issuer string, clientRepo ClientUC) (*Provider, error) {
 		opts = append(opts, op.WithAllowInsecure())
 	}
 
+	storage := storage.New()
 	provider, err := op.NewProvider(
 		&op.Config{
-			CryptoKey: getCryptoKey(),
+			// CryptoKey encrypts the authorization code handed to the client.
+			CryptoKey: sha256.Sum256([]byte(cryptoKey)),
 		},
-		NewStorage(clientRepo),
+		storage,
 		op.StaticIssuer(issuer),
 		opts...,
 	)
@@ -36,14 +44,6 @@ func NewProvider(issuer string, clientRepo ClientUC) (*Provider, error) {
 
 	return &Provider{
 		Provider: provider,
+		Store:    storage,
 	}, nil
-}
-
-func getCryptoKey() [32]byte {
-	temp := "secret_key_for_crypto_operations"
-
-	var key [32]byte
-	copy(key[:], temp)
-
-	return key
 }

@@ -12,6 +12,10 @@ import (
 
 var _ op.Client = (*Client)(nil)
 
+// DefaultLoginURLTemplate points at the built-in login page, used by clients
+// that do not bring their own login UI.
+const DefaultLoginURLTemplate = "/login?auth_request_id=%s"
+
 type Client struct {
 	ID                            string    `json:"id"`
 	Name                          string    `json:"name"`
@@ -79,7 +83,7 @@ func (c *Client) GrantTypes() []oidc.GrantType {
 
 func (c *Client) LoginURL(id string) string {
 	if c.LoginURLTemplate == "" {
-		return ""
+		return fmt.Sprintf(DefaultLoginURLTemplate, id)
 	}
 	return fmt.Sprintf(c.LoginURLTemplate, id)
 }

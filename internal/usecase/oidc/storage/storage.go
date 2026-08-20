@@ -1,4 +1,4 @@
-package op
+package storage
 
 import (
 	"context"
@@ -6,14 +6,14 @@ import (
 
 // Storage implements the zitadel op.Storage interface
 type Storage struct {
-	client ClientUC
+	client      ClientUC
+	authRequest AuthRequestUC
 }
 
-func NewStorage(
-	client ClientUC,
-) *Storage {
+func New(c ClientUC, ar AuthRequestUC) *Storage {
 	return &Storage{
-		client: client,
+		client:      c,
+		authRequest: ar,
 	}
 }
 

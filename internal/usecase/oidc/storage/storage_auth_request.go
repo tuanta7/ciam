@@ -1,4 +1,4 @@
-package op
+package storage
 
 import (
 	"context"
@@ -6,6 +6,10 @@ import (
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
+
+type AuthRequestUC interface {
+	Create()
+}
 
 func (s *Storage) CreateAuthRequest(ctx context.Context, request *oidc.AuthRequest, s2 string) (op.AuthRequest, error) {
 	//TODO implement me

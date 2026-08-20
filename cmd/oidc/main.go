@@ -7,9 +7,9 @@ import (
 
 	"github.com/tuanta7/ciam/internal/config"
 	"github.com/tuanta7/ciam/internal/repository"
-	"github.com/tuanta7/ciam/internal/transport/rest"
 	"github.com/tuanta7/ciam/internal/transport/rest/handler"
 	"github.com/tuanta7/ciam/internal/usecase/client"
+	ciamoidc "github.com/tuanta7/ciam/internal/usecase/oidc"
 	"github.com/tuanta7/ciam/pkg/utils"
 	"github.com/urfave/cli/v3"
 )
@@ -19,7 +19,6 @@ func main() {
 		Commands: []*cli.Command{},
 		Action: func(ctx context.Context, command *cli.Command) error {
 			cfg := config.LoadConfig()
-			initMonitor(ctx, cfg)
 
 			executor, err := repository.NewPostgresClient(ctx, cfg.Postgres.DSN)
 			if err != nil {
@@ -31,7 +30,12 @@ func main() {
 			clientUC := client.NewUseCase(clientRepo)
 			clientHandler := handler.NewClientHandler(clientUC)
 
-			server := rest.NewServer(cfg.BindAddress, clientHandler)
+			provider, err := ciamoidc.NewProvider(cfg.Issuer, cfg.CryptoKey, clientUC)
+			if err != nil {
+				return err
+			}
+
+			server := NewServer(cfg, provider, clientHandler)
 			return utils.StartServerWithGracefulShutdown(server)
 		},
 	}

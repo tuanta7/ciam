@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/tuanta7/ciam/internal/domain"
+	"github.com/tuanta7/ciam/internal/transport/rest"
 	"github.com/tuanta7/ciam/internal/transport/rest/middleware"
 	"github.com/tuanta7/ciam/internal/usecase/client"
 )
@@ -24,11 +25,11 @@ func (h *ClientHandler) ListClients(w http.ResponseWriter, r *http.Request) {
 	page, pageSize, _ := middleware.GetPaginationParams(r.Context())
 	clients, err := h.uc.List(r.Context(), page, pageSize)
 	if err != nil {
-		_ = ErrorJSON(w, InternalError(WithDescription(err.Error())))
+		_ = rest.ErrorJSON(w, rest.InternalError().WithDescription(err.Error()))
 		return
 	}
 
-	_ = WriteJSON(w, http.StatusOK, clients)
+	_ = rest.WriteJSON(w, http.StatusOK, clients)
 }
 
 func (h *ClientHandler) GetClient(w http.ResponseWriter, r *http.Request) {
@@ -38,13 +39,13 @@ func (h *ClientHandler) GetClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = WriteJSON(w, http.StatusOK, item)
+	_ = rest.WriteJSON(w, http.StatusOK, item)
 }
 
 func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 	var input client.CreateInput
-	if err := ParseJSON(r.Body, &input); err != nil {
-		_ = ErrorJSON(w, InvalidArgumentError(WithDescription(err.Error())))
+	if err := rest.ParseJSON(r.Body, &input); err != nil {
+		_ = rest.ErrorJSON(w, rest.InvalidArgumentError().WithDescription(err.Error()))
 		return
 	}
 
@@ -54,13 +55,13 @@ func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = WriteJSON(w, http.StatusCreated, item)
+	_ = rest.WriteJSON(w, http.StatusCreated, item)
 }
 
 func (h *ClientHandler) UpdateClient(w http.ResponseWriter, r *http.Request) {
 	var input client.UpdateInput
-	if err := ParseJSON(r.Body, &input); err != nil {
-		_ = ErrorJSON(w, InvalidArgumentError(WithDescription(err.Error())))
+	if err := rest.ParseJSON(r.Body, &input); err != nil {
+		_ = rest.ErrorJSON(w, rest.InvalidArgumentError().WithDescription(err.Error()))
 		return
 	}
 
@@ -70,7 +71,7 @@ func (h *ClientHandler) UpdateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = WriteJSON(w, http.StatusOK, item)
+	_ = rest.WriteJSON(w, http.StatusOK, item)
 }
 
 func (h *ClientHandler) DeleteClient(w http.ResponseWriter, r *http.Request) {
@@ -85,10 +86,10 @@ func (h *ClientHandler) DeleteClient(w http.ResponseWriter, r *http.Request) {
 func (h *ClientHandler) writeError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, domain.ErrClientNotFound):
-		_ = ErrorJSON(w, Error(http.StatusNotFound, "not found", WithDescription(err.Error())))
+		_ = rest.ErrorJSON(w, rest.Error(http.StatusNotFound, "not found").WithDescription(err.Error()))
 	case errors.Is(err, domain.ErrInvalidClient):
-		_ = ErrorJSON(w, InvalidArgumentError(WithDescription(err.Error())))
+		_ = rest.ErrorJSON(w, rest.InvalidArgumentError().WithDescription(err.Error()))
 	default:
-		_ = ErrorJSON(w, InternalError(WithDescription(err.Error())))
+		_ = rest.ErrorJSON(w, rest.InternalError().WithDescription(err.Error()))
 	}
 }
