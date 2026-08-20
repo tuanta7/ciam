@@ -3,15 +3,15 @@ package handler
 import (
 	"net/http"
 
-	"github.com/tuanta7/ciam/internal/oidc"
+	ciamop "github.com/tuanta7/ciam/internal/usecase/op"
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
 
 type OIDCHandler struct {
-	provider *oidc.Provider
+	provider *ciamop.Provider
 }
 
-func NewOIDCHandler(provider *oidc.Provider) *OIDCHandler {
+func NewOIDCHandler(provider *ciamop.Provider) *OIDCHandler {
 	return &OIDCHandler{
 		provider: provider,
 	}

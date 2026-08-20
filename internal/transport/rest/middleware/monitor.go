@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/tuanta7/ciam/pkg/o11y"
+	"github.com/tuanta7/ciam/pkg/otelx"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -91,7 +91,7 @@ func WithTrace(tracer trace.Tracer, next http.Handler) http.Handler {
 	})
 }
 
-func WithLog(logger *o11y.Logger, next http.Handler) http.Handler {
+func WithLog(logger *otelx.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Request received",
 			slog.String("method", r.Method),
@@ -102,7 +102,7 @@ func WithLog(logger *o11y.Logger, next http.Handler) http.Handler {
 	})
 }
 
-func WithTelemetry(tracer trace.Tracer, logger *o11y.Logger, next http.Handler) http.Handler {
+func WithTelemetry(tracer trace.Tracer, logger *otelx.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		WithLog(logger, WithTrace(tracer, WithMetric(next))).ServeHTTP(w, r)
 	})

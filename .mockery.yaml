@@ -1,10 +1,10 @@
 all: false
-dir: 'mocks/{{.InterfaceDirRelative}}'
-filename: 'mock_{{.SrcPackageName}}_{{.InterfaceName | lower}}_test.go'
-template: 'testify'
-pkgname: 'mock{{.SrcPackageName}}'
+dir: "mocks/{{.InterfaceDirRelative}}"
+filename: "mock_{{.SrcPackageName}}_{{.InterfaceName | lower}}_test.go"
+template: "testify"
+pkgname: "mock{{.SrcPackageName}}"
 recursive: true
 packages:
-  github.com/tuanta7/ciam/internal/oauth2client:
+  github.com/tuanta7/ciam/internal/domain:
     config:
       all: true

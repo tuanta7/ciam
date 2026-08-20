@@ -5,16 +5,16 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/tuanta7/ciam/internal/oauth2client"
+	"github.com/tuanta7/ciam/internal/domain"
 	"github.com/tuanta7/ciam/internal/transport/rest/middleware"
-	"github.com/tuanta7/ciam/pkg/httpx"
+	"github.com/tuanta7/ciam/internal/usecase/client"
 )
 
 type ClientHandler struct {
-	uc *oauth2client.UseCase
+	uc *client.UseCase
 }
 
-func NewClientHandler(uc *oauth2client.UseCase) *ClientHandler {
+func NewClientHandler(uc *client.UseCase) *ClientHandler {
 	return &ClientHandler{
 		uc: uc,
 	}
@@ -24,11 +24,11 @@ func (h *ClientHandler) ListClients(w http.ResponseWriter, r *http.Request) {
 	page, pageSize, _ := middleware.GetPaginationParams(r.Context())
 	clients, err := h.uc.List(r.Context(), page, pageSize)
 	if err != nil {
-		_ = httpx.ErrorJSON(w, httpx.InternalError(httpx.WithDescription(err.Error())))
+		_ = ErrorJSON(w, InternalError(WithDescription(err.Error())))
 		return
 	}
 
-	_ = httpx.WriteJSON(w, http.StatusOK, clients)
+	_ = WriteJSON(w, http.StatusOK, clients)
 }
 
 func (h *ClientHandler) GetClient(w http.ResponseWriter, r *http.Request) {
@@ -38,13 +38,13 @@ func (h *ClientHandler) GetClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = httpx.WriteJSON(w, http.StatusOK, item)
+	_ = WriteJSON(w, http.StatusOK, item)
 }
 
 func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
-	var input oauth2client.CreateInput
-	if err := httpx.ReadAndValidateJSON(r.Body, &input); err != nil {
-		_ = httpx.ErrorJSON(w, httpx.InvalidArgumentError(httpx.WithDescription(err.Error())))
+	var input client.CreateInput
+	if err := ParseJSON(r.Body, &input); err != nil {
+		_ = ErrorJSON(w, InvalidArgumentError(WithDescription(err.Error())))
 		return
 	}
 
@@ -54,13 +54,13 @@ func (h *ClientHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = httpx.WriteJSON(w, http.StatusCreated, item)
+	_ = WriteJSON(w, http.StatusCreated, item)
 }
 
 func (h *ClientHandler) UpdateClient(w http.ResponseWriter, r *http.Request) {
-	var input oauth2client.UpdateInput
-	if err := httpx.ReadAndValidateJSON(r.Body, &input); err != nil {
-		_ = httpx.ErrorJSON(w, httpx.InvalidArgumentError(httpx.WithDescription(err.Error())))
+	var input client.UpdateInput
+	if err := ParseJSON(r.Body, &input); err != nil {
+		_ = ErrorJSON(w, InvalidArgumentError(WithDescription(err.Error())))
 		return
 	}
 
@@ -70,7 +70,7 @@ func (h *ClientHandler) UpdateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = httpx.WriteJSON(w, http.StatusOK, item)
+	_ = WriteJSON(w, http.StatusOK, item)
 }
 
 func (h *ClientHandler) DeleteClient(w http.ResponseWriter, r *http.Request) {
@@ -84,11 +84,11 @@ func (h *ClientHandler) DeleteClient(w http.ResponseWriter, r *http.Request) {
 
 func (h *ClientHandler) writeError(w http.ResponseWriter, err error) {
 	switch {
-	case errors.Is(err, oauth2client.ErrNotFound):
-		_ = httpx.ErrorJSON(w, httpx.Error(http.StatusNotFound, "not found", httpx.WithDescription(err.Error())))
-	case errors.Is(err, oauth2client.ErrInvalidClient):
-		_ = httpx.ErrorJSON(w, httpx.InvalidArgumentError(httpx.WithDescription(err.Error())))
+	case errors.Is(err, domain.ErrClientNotFound):
+		_ = ErrorJSON(w, Error(http.StatusNotFound, "not found", WithDescription(err.Error())))
+	case errors.Is(err, domain.ErrInvalidClient):
+		_ = ErrorJSON(w, InvalidArgumentError(WithDescription(err.Error())))
 	default:
-		_ = httpx.ErrorJSON(w, httpx.InternalError(httpx.WithDescription(err.Error())))
+		_ = ErrorJSON(w, InternalError(WithDescription(err.Error())))
 	}
 }
