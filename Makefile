@@ -3,8 +3,8 @@ MIGRATIONS_FOLDER=./data/migrations
 PROTO_FOLDER=protobuf/proto
 BUF_VERSION?=1.58.0
 
-build-oidc:
-	CGO_ENABLED=0 GOOS=linux go build -o ciam ./cmd/oidc
+build-op:
+	CGO_ENABLED=0 GOOS=linux go build -o ciam ./cmd/op
 
 env-example:
 	awk -F'=' 'BEGIN {OFS="="} \

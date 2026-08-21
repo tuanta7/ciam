@@ -7,8 +7,10 @@ import (
 
 	"github.com/tuanta7/ciam/internal/config"
 	clientrest "github.com/tuanta7/ciam/internal/handler/rest/client"
+	"github.com/tuanta7/ciam/internal/handler/rest/login"
 	"github.com/tuanta7/ciam/internal/repository"
 	clientuc "github.com/tuanta7/ciam/internal/usecase/client"
+	"github.com/tuanta7/ciam/internal/usecase/oidc"
 	"github.com/tuanta7/ciam/pkg/utils"
 	"github.com/urfave/cli/v3"
 )
@@ -29,7 +31,17 @@ func main() {
 			clientUC := clientuc.NewUseCase(clientRepo)
 			clientHandler := clientrest.NewHandler(clientUC)
 
-			server := NewServer(cfg, clientHandler)
+			provider, err := oidc.NewProvider(
+				cfg.Issuer,
+				cfg.CryptoKey,
+				clientUC,
+			)
+			if err != nil {
+				return err
+			}
+
+			authenticator := login.NewHandler(provider, cfg.Issuer)
+			server := NewServer(cfg, provider, authenticator, clientHandler)
 			return utils.StartServerWithGracefulShutdown(server)
 		},
 	}
