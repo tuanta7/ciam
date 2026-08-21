@@ -6,6 +6,7 @@ import (
 	"github.com/tuanta7/ciam/internal/domain"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/oidc/v3/pkg/op"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type ClientUC interface {
@@ -22,7 +23,7 @@ func (s *Storage) AuthorizeClientIDSecret(ctx context.Context, clientID, clientS
 		return err
 	}
 
-	if client.Secret != clientSecret {
+	if err := bcrypt.CompareHashAndPassword([]byte(client.Secret), []byte(clientSecret)); err != nil {
 		return oidc.ErrInvalidClient().WithDescription("invalid client secret")
 	}
 

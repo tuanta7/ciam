@@ -17,7 +17,9 @@ import (
 
 func main() {
 	cmd := &cli.Command{
-		Commands: []*cli.Command{},
+		Commands: []*cli.Command{
+			createClientCommand(),
+		},
 		Action: func(ctx context.Context, command *cli.Command) error {
 			cfg := config.LoadConfig()
 

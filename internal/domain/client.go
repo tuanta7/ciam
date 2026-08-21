@@ -20,7 +20,7 @@ type Client struct {
 	ID                            string    `json:"id"`
 	Name                          string    `json:"name"`
 	Description                   string    `json:"description"`
-	Secret                        string    `json:"secret,omitempty"`
+	Secret                        string    `json:"-"`
 	Scopes                        []string  `json:"scopes"`
 	RedirectURIList               []string  `json:"redirect_uris"`
 	PostLogoutRedirectURIList     []string  `json:"post_logout_redirect_uris"`

@@ -49,13 +49,16 @@ func (h *Handler) CreateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	item, err := h.uc.Create(r.Context(), input)
+	item, secret, err := h.uc.Create(r.Context(), input)
 	if err != nil {
 		h.writeError(w, err)
 		return
 	}
 
-	_ = rest.WriteJSON(w, http.StatusCreated, item)
+	_ = rest.WriteJSON(w, http.StatusCreated, rest.JSON{
+		"client": item,
+		"secret": secret,
+	})
 }
 
 func (h *Handler) UpdateClient(w http.ResponseWriter, r *http.Request) {

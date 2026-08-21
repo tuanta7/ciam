@@ -2,7 +2,9 @@ package client
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"errors"
 	"fmt"
 
@@ -13,6 +15,7 @@ import (
 	"github.com/tuanta7/ciam/internal/repository/models"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/oidc/v3/pkg/op"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UseCase struct {
@@ -61,17 +64,35 @@ type CreateInput struct {
 	UpdatedBy                      string   `json:"updated_by"`
 }
 
-func (uc *UseCase) Create(ctx context.Context, in CreateInput) (*domain.Client, error) {
+// Create creates a client, generating and returning a client secret in
+// plaintext when the client is confidential (TokenEndpointAuthMethod is not
+// "none"). Only the bcrypt hash is persisted; the plaintext is returned once
+// here and is never retrievable again.
+func (uc *UseCase) Create(ctx context.Context, in CreateInput) (*domain.Client, string, error) {
 	in.normalize()
 	if err := in.validate(); err != nil {
-		return nil, err
+		return nil, "", err
+	}
+
+	var plainSecret, hashedSecret string
+	if in.TokenEndpointAuthMethod != string(oidc.AuthMethodNone) {
+		var err error
+		plainSecret, err = generateSecret()
+		if err != nil {
+			return nil, "", err
+		}
+		hash, err := bcrypt.GenerateFromPassword([]byte(plainSecret), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, "", err
+		}
+		hashedSecret = string(hash)
 	}
 
 	client := &models.Client{
 		ID:                             in.ID,
 		Name:                           in.Name,
 		Description:                    in.Description,
-		Secret:                         "",
+		Secret:                         hashedSecret,
 		Scope:                          types.StringArray(in.Scopes),
 		RedirectUris:                   types.StringArray(in.RedirectURIs),
 		PostLogoutRedirectUris:         types.StringArray(in.PostLogoutRedirectURIs),
@@ -90,10 +111,18 @@ func (uc *UseCase) Create(ctx context.Context, in CreateInput) (*domain.Client, 
 		UpdatedBy:                      in.UpdatedBy,
 	}
 	if err := uc.repo.Create(ctx, client); err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return domain.NewClientFromRow(client), nil
+	return domain.NewClientFromRow(client), plainSecret, nil
+}
+
+func generateSecret() (string, error) {
+	buf := make([]byte, 32)
+	if _, err := rand.Read(buf); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(buf), nil
 }
 
 func (uc *UseCase) Get(ctx context.Context, id string) (*domain.Client, error) {
