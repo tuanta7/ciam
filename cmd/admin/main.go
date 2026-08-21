@@ -1,11 +1,40 @@
 package main
 
+import (
+	"context"
+	"log"
+	"os"
+
+	"github.com/tuanta7/ciam/internal/config"
+	clientrest "github.com/tuanta7/ciam/internal/handler/rest/client"
+	"github.com/tuanta7/ciam/internal/repository"
+	clientuc "github.com/tuanta7/ciam/internal/usecase/client"
+	"github.com/tuanta7/ciam/pkg/utils"
+	"github.com/urfave/cli/v3"
+)
+
 func main() {
-	// router.Route("/api/v1/clients", func(r chi.Router) {
-	// 	r.With(middleware.Pagination).Get("/", clientHandler.ListClients)
-	// 	r.Post("/", clientHandler.CreateClient)
-	// 	r.Get("/{id}", clientHandler.GetClient)
-	// 	r.Put("/{id}", clientHandler.UpdateClient)
-	// 	r.Delete("/{id}", clientHandler.DeleteClient)
-	// })
+	cmd := &cli.Command{
+		Commands: []*cli.Command{},
+		Action: func(ctx context.Context, command *cli.Command) error {
+			cfg := config.LoadConfig()
+
+			executor, err := repository.NewPostgresClient(ctx, cfg.Postgres.DSN)
+			if err != nil {
+				return err
+			}
+			defer executor.Close()
+
+			clientRepo := repository.NewClientRepository(executor)
+			clientUC := clientuc.NewUseCase(clientRepo)
+			clientHandler := clientrest.NewHandler(clientUC)
+
+			server := NewServer(cfg, clientHandler)
+			return utils.StartServerWithGracefulShutdown(server)
+		},
+	}
+
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
+		log.Fatalf("Error: %v", err)
+	}
 }

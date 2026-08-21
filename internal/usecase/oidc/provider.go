@@ -12,9 +12,6 @@ import (
 
 type Provider struct {
 	*op.Provider
-
-	// Store is the auth request storage, needed by the login UI to complete a
-	// request once the user has been authenticated.
 	Store *storage.Storage
 }
 
@@ -28,7 +25,8 @@ func NewProvider(issuer, cryptoKey string, clientUC storage.ClientUC) (*Provider
 		opts = append(opts, op.WithAllowInsecure())
 	}
 
-	storage := storage.New()
+	// TODO
+	storage := storage.New(nil, nil)
 	provider, err := op.NewProvider(
 		&op.Config{
 			// CryptoKey encrypts the authorization code handed to the client.

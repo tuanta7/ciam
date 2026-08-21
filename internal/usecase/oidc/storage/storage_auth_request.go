@@ -35,3 +35,10 @@ func (s *Storage) DeleteAuthRequest(ctx context.Context, s2 string) error {
 	//TODO implement me
 	panic("implement me")
 }
+
+// AuthenticateAuthRequest marks the auth request as authenticated by subject,
+// called by the login handler once credentials have been verified.
+func (s *Storage) AuthenticateAuthRequest(ctx context.Context, requestID, subject string) error {
+	//TODO implement me
+	panic("implement me")
+}

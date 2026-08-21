@@ -16,13 +16,13 @@ type Server struct {
 	server        *http.Server
 	router        chi.Router
 	op            *oidc.Provider
-	authenticator *login.LoginHandler
+	authenticator *login.Handler
 }
 
 func NewServer(
 	cfg *config.EnvConfig,
 	provider *oidc.Provider,
-	authenticator *login.LoginHandler,
+	authenticator *login.Handler,
 ) *Server {
 	router := chi.NewRouter()
 
