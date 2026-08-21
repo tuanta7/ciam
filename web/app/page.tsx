@@ -1,65 +1,185 @@
-import Image from "next/image";
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { Button, Chip, Modal, Pagination, Table, toast } from "@heroui/react";
+import { ClientFormModal } from "@/components/client-form-modal";
+import {
+  createClient,
+  deleteClient,
+  listClients,
+  updateClient,
+  type Client,
+  type ClientInput,
+} from "@/lib/api";
+
+const PAGE_SIZE = 10;
+
+function errorMessage(err: unknown, fallback: string) {
+  return err instanceof Error ? err.message : fallback;
+}
 
 export default function Home() {
+  const [clients, setClients] = useState<Client[]>([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Client | "new" | null>(null);
+  const [newSecret, setNewSecret] = useState<{ name: string; secret: string } | null>(null);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      setClients(await listClients(page, PAGE_SIZE));
+    } catch (err) {
+      toast.danger(errorMessage(err, "Failed to load clients"));
+    } finally {
+      setLoading(false);
+    }
+  }, [page]);
+
+  useEffect(() => {
+    // Fetch-on-mount/page-change: syncs the table with the `page` external
+    // source, so the loading flag it sets is intentional, not derivable state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    refresh();
+  }, [refresh]);
+
+  const handleSubmit = async (input: ClientInput) => {
+    try {
+      if (editing && editing !== "new") {
+        await updateClient(editing.id, input);
+        toast.success("Client updated");
+      } else {
+        const { client, secret } = await createClient(input);
+        toast.success("Client created");
+        if (secret) setNewSecret({ name: client.name, secret });
+      }
+      setEditing(null);
+      await refresh();
+    } catch (err) {
+      toast.danger(errorMessage(err, "Save failed"));
+    }
+  };
+
+  const handleDelete = async (client: Client) => {
+    if (!confirm(`Delete client "${client.name}"? This cannot be undone.`)) return;
+    try {
+      await deleteClient(client.id);
+      toast.success("Client deleted");
+      await refresh();
+    } catch (err) {
+      toast.danger(errorMessage(err, "Delete failed"));
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="flex-1 p-8 max-w-5xl mx-auto w-full flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">OIDC Clients</h1>
+        <Button onPress={() => setEditing("new")}>New client</Button>
+      </div>
+
+      <Table>
+        <Table.ScrollContainer>
+          <Table.Content aria-label="OIDC clients">
+            <Table.Header>
+              <Table.Column isRowHeader>Name</Table.Column>
+              <Table.Column>Application type</Table.Column>
+              <Table.Column>Auth method</Table.Column>
+              <Table.Column>Grant types</Table.Column>
+              <Table.Column>Created</Table.Column>
+              <Table.Column>Actions</Table.Column>
+            </Table.Header>
+            <Table.Body>
+              {clients.map((c) => (
+                <Table.Row key={c.id}>
+                  <Table.Cell>{c.name}</Table.Cell>
+                  <Table.Cell>{c.application_type}</Table.Cell>
+                  <Table.Cell>{c.token_endpoint_auth_method}</Table.Cell>
+                  <Table.Cell>
+                    <div className="flex flex-wrap gap-1">
+                      {c.grant_types.map((gt) => (
+                        <Chip key={gt} size="sm">
+                          {gt}
+                        </Chip>
+                      ))}
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>{new Date(c.created_at).toLocaleDateString()}</Table.Cell>
+                  <Table.Cell>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="secondary" onPress={() => setEditing(c)}>
+                        Edit
+                      </Button>
+                      <Button size="sm" variant="danger" onPress={() => handleDelete(c)}>
+                        Delete
+                      </Button>
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table.Content>
+        </Table.ScrollContainer>
+      </Table>
+
+      {!loading && clients.length === 0 && (
+        <p className="text-center text-sm text-gray-500">No clients yet.</p>
+      )}
+
+      <Pagination className="justify-center">
+        <Pagination.Content>
+          <Pagination.Item>
+            <Pagination.Previous isDisabled={page === 1} onPress={() => setPage((p) => p - 1)}>
+              <Pagination.PreviousIcon />
+              Previous
+            </Pagination.Previous>
+          </Pagination.Item>
+          <Pagination.Item>
+            <Pagination.Next
+              isDisabled={clients.length < PAGE_SIZE}
+              onPress={() => setPage((p) => p + 1)}
+            >
+              Next
+              <Pagination.NextIcon />
+            </Pagination.Next>
+          </Pagination.Item>
+        </Pagination.Content>
+      </Pagination>
+
+      {editing !== null && (
+        <ClientFormModal
+          key={editing === "new" ? "new" : editing.id}
+          client={editing}
+          onClose={() => setEditing(null)}
+          onSubmit={handleSubmit}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      )}
+
+      <Modal.Backdrop
+        isOpen={newSecret !== null}
+        onOpenChange={(open) => !open && setNewSecret(null)}
+      >
+        <Modal.Container placement="auto">
+          <Modal.Dialog className="sm:max-w-md">
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>Client secret</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body className="p-6 flex flex-col gap-2">
+              <p className="text-sm">
+                This is the only time the secret for <strong>{newSecret?.name}</strong> will be
+                shown. Copy it now.
+              </p>
+              <code className="break-all rounded bg-gray-100 dark:bg-gray-800 p-2 text-sm select-all">
+                {newSecret?.secret}
+              </code>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button slot="close">Done</Button>
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </div>
   );
 }
