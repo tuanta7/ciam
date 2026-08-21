@@ -81,11 +81,11 @@ func (c *Client) GrantTypes() []oidc.GrantType {
 	return values
 }
 
-func (c *Client) LoginURL(id string) string {
+func (c *Client) LoginURL(authReqID string) string {
 	if c.LoginURLTemplate == "" {
-		return fmt.Sprintf(DefaultLoginURLTemplate, id)
+		return fmt.Sprintf(DefaultLoginURLTemplate, authReqID)
 	}
-	return fmt.Sprintf(c.LoginURLTemplate, id)
+	return fmt.Sprintf(c.LoginURLTemplate, authReqID)
 }
 
 func (c *Client) AccessTokenType() op.AccessTokenType {
