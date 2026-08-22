@@ -1,5 +1,5 @@
 ENV_FILE=.env
-MIGRATIONS_FOLDER=./data/migrations
+MIGRATIONS_FOLDER=./migrations
 PROTO_FOLDER=protobuf/proto
 BUF_VERSION?=1.58.0
 
@@ -18,7 +18,7 @@ install-goose:
 	ls "$(shell go env GOPATH)/bin/" | grep goose
 
 migrate-sql:
-	goose -dir=$(MIGRATIONS_FOLDER)/postgres create $(NAME) sql
+	goose -dir=$(MIGRATIONS_FOLDER) create $(NAME) sql
 
 migrate-up:
 	goose -env $(ENV_FILE) up

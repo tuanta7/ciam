@@ -7,17 +7,15 @@ import (
 )
 
 const (
-	defaultPage          = 1
-	defaultPageSize      = 10
-	defaultTotalRequired = false
+	defaultPage     = 1
+	defaultPageSize = 10
 
 	ctxKeyPaginationParams = "pagination_params"
 )
 
 type paginationParams struct {
-	Page          int32
-	PageSize      int32
-	TotalRequired bool
+	Page     int32
+	PageSize int32
 }
 
 // Pagination middleware is used to handle pagination parameters when using offset-based pagination.
@@ -35,22 +33,19 @@ func Pagination(next http.Handler) http.Handler {
 			pageSize = ps
 		}
 
-		totalRequired := r.URL.Query().Get("total_required") == "true"
-
 		ctx := context.WithValue(r.Context(), ctxKeyPaginationParams, paginationParams{
-			Page:          int32(page),
-			PageSize:      int32(pageSize),
-			TotalRequired: totalRequired,
+			Page:     int32(page),
+			PageSize: int32(pageSize),
 		})
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-// GetPaginationParams is a helper function to retrieve pagination params from the context.
-func GetPaginationParams(ctx context.Context) (page int32, pageSize int32, totalRequired bool) {
-	if params, ok := ctx.Value(ctxKeyPaginationParams).(paginationParams); ok {
-		return params.Page, params.PageSize, params.TotalRequired
+func GetPaginationParams(ctx context.Context) (page int32, pageSize int32) {
+	params, ok := ctx.Value(ctxKeyPaginationParams).(paginationParams)
+	if ok {
+		return params.Page, params.PageSize
 	}
 
-	return defaultPage, defaultPageSize, defaultTotalRequired
+	return defaultPage, defaultPageSize
 }

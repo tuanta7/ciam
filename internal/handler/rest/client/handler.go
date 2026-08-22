@@ -22,7 +22,16 @@ func NewHandler(uc *client.UseCase) *Handler {
 }
 
 func (h *Handler) ListClients(w http.ResponseWriter, r *http.Request) {
-	page, pageSize, _ := middleware.GetPaginationParams(r.Context())
+	page, pageSize := middleware.GetPaginationParams(r.Context())
+
+	if page < 1 {
+		page = 1
+	}
+
+	if pageSize < 1 {
+		pageSize = 10
+	}
+
 	clients, err := h.uc.List(r.Context(), page, pageSize)
 	if err != nil {
 		_ = rest.ErrorJSON(w, rest.InternalError().WithDescription(err.Error()))
@@ -43,38 +52,51 @@ func (h *Handler) GetClient(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateClient(w http.ResponseWriter, r *http.Request) {
-	var input client.CreateInput
+	var input ClientInput
 	if err := rest.ParseJSON(r.Body, &input); err != nil {
 		_ = rest.ErrorJSON(w, rest.InvalidArgumentError().WithDescription(err.Error()))
 		return
 	}
 
-	item, secret, err := h.uc.Create(r.Context(), input)
+	if err := input.validate(); err != nil {
+		h.writeError(w, err)
+		return
+	}
+
+	client, secret, err := h.uc.Create(r.Context(), input.toDomain())
 	if err != nil {
 		h.writeError(w, err)
 		return
 	}
 
 	_ = rest.WriteJSON(w, http.StatusCreated, rest.JSON{
-		"client": item,
+		"client": client,
 		"secret": secret,
 	})
 }
 
 func (h *Handler) UpdateClient(w http.ResponseWriter, r *http.Request) {
-	var input client.UpdateInput
+	var input ClientInput
 	if err := rest.ParseJSON(r.Body, &input); err != nil {
 		_ = rest.ErrorJSON(w, rest.InvalidArgumentError().WithDescription(err.Error()))
 		return
 	}
 
-	item, err := h.uc.Update(r.Context(), chi.URLParam(r, "id"), input)
+	if err := input.validate(); err != nil {
+		h.writeError(w, err)
+		return
+	}
+
+	dc := input.toDomain()
+	dc.ID = chi.URLParam(r, "id")
+
+	client, err := h.uc.Update(r.Context(), dc)
 	if err != nil {
 		h.writeError(w, err)
 		return
 	}
 
-	_ = rest.WriteJSON(w, http.StatusOK, item)
+	_ = rest.WriteJSON(w, http.StatusOK, client)
 }
 
 func (h *Handler) DeleteClient(w http.ResponseWriter, r *http.Request) {

@@ -5,16 +5,14 @@ import (
 	"slices"
 	"time"
 
+	"github.com/aarondl/sqlboiler/v4/types"
+	"github.com/tuanta7/ciam/internal/config"
 	"github.com/tuanta7/ciam/internal/repository/models"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
 
 var _ op.Client = (*Client)(nil)
-
-// DefaultLoginURLTemplate points at the built-in login page, used by clients
-// that do not bring their own login UI.
-const DefaultLoginURLTemplate = "/login?auth_request_id=%s"
 
 type Client struct {
 	ID                            string    `json:"id"`
@@ -83,7 +81,7 @@ func (c *Client) GrantTypes() []oidc.GrantType {
 
 func (c *Client) LoginURL(authReqID string) string {
 	if c.LoginURLTemplate == "" {
-		return fmt.Sprintf(DefaultLoginURLTemplate, authReqID)
+		return fmt.Sprintf(config.DefaultLoginURLTemplate, authReqID)
 	}
 	return fmt.Sprintf(c.LoginURLTemplate, authReqID)
 }
@@ -134,6 +132,31 @@ func (c *Client) restrictScopes(scopes []string) []string {
 		}
 	}
 	return allowed
+}
+
+func (c *Client) ToRow() *models.Client {
+	return &models.Client{
+		ID:                             c.ID,
+		Name:                           c.Name,
+		Description:                    c.Description,
+		Secret:                         c.Secret,
+		Scope:                          types.StringArray(c.Scopes),
+		RedirectUris:                   types.StringArray(c.RedirectURIList),
+		PostLogoutRedirectUris:         types.StringArray(c.PostLogoutRedirectURIList),
+		GrantTypes:                     types.StringArray(c.GrantTypeList),
+		ResponseTypes:                  types.StringArray(c.ResponseTypeList),
+		Audience:                       types.StringArray(c.AudienceList),
+		TokenEndpointAuthMethod:        c.TokenEndpointAuthMethod,
+		ApplicationType:                c.ApplicationTypeName,
+		AccessTokenType:                c.AccessTokenTypeName,
+		LoginURL:                       c.LoginURLTemplate,
+		IDTokenLifetimeSeconds:         int(c.IDTokenLifetimeSeconds),
+		DevMode:                        c.DevModeEnabled,
+		ClockSkewSeconds:               int(c.ClockSkewSeconds),
+		IDTokenUserinfoClaimsAssertion: c.IDTokenUserinfoClaimsAsserted,
+		CreatedBy:                      c.CreatedBy,
+		UpdatedBy:                      c.UpdatedBy,
+	}
 }
 
 func NewClientFromRow(row *models.Client) *Client {

@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/tuanta7/ciam/internal/config"
+	"github.com/tuanta7/ciam/internal/domain"
 	"github.com/tuanta7/ciam/internal/repository"
 	clientuc "github.com/tuanta7/ciam/internal/usecase/client"
 	"github.com/urfave/cli/v3"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
+	"github.com/zitadel/oidc/v3/pkg/op"
 )
 
 func createClientCommand() *cli.Command {
@@ -33,13 +35,19 @@ func createClientCommand() *cli.Command {
 			clientRepo := repository.NewClientRepository(executor)
 			clientUC := clientuc.NewUseCase(clientRepo)
 
-			created, secret, err := clientUC.Create(ctx, clientuc.CreateInput{
+			// Defaults live on the REST ClientInput, so spell out everything here.
+			created, secret, err := clientUC.Create(ctx, &domain.Client{
 				Name:                    command.String("name"),
-				RedirectURIs:            []string{command.String("redirect-uri")},
-				GrantTypes:              []string{string(oidc.GrantTypeCode)},
-				ResponseTypes:           []string{string(oidc.ResponseTypeCode)},
+				Scopes:                  []string{oidc.ScopeOpenID, oidc.ScopeProfile},
+				RedirectURIList:         []string{command.String("redirect-uri")},
+				GrantTypeList:           []string{string(oidc.GrantTypeCode)},
+				ResponseTypeList:        []string{string(oidc.ResponseTypeCode)},
 				TokenEndpointAuthMethod: string(oidc.AuthMethodNone),
+				ApplicationTypeName:     op.ApplicationTypeWeb.String(),
+				AccessTokenTypeName:     op.AccessTokenTypeBearer.String(),
+				IDTokenLifetimeSeconds:  int32(config.DefaultIDTokenLifetime.Seconds()),
 				CreatedBy:               "cli",
+				UpdatedBy:               "cli",
 			})
 			if err != nil {
 				return err
