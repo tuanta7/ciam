@@ -49,10 +49,12 @@ func WriteJSON(w http.ResponseWriter, code int, data any) error {
 }
 
 func ErrorJSON(w http.ResponseWriter, err HTTPError) error {
-	return WriteJSON(w, err.Code, map[string]string{
-		"error": err.Error(),
-		"hint":  err.Hint,
-	})
+	code := http.StatusInternalServerError
+	if err.Code > 0 {
+		code = err.Code
+	}
+
+	return WriteJSON(w, code, err)
 }
 
 var validate = validator.New(validator.WithRequiredStructEnabled())

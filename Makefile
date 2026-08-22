@@ -3,15 +3,18 @@ MIGRATIONS_FOLDER=./migrations
 PROTO_FOLDER=protobuf/proto
 BUF_VERSION?=1.58.0
 
-build-op:
-	CGO_ENABLED=0 GOOS=linux go build -o ciam ./cmd/op
-
 env-example:
 	awk -F'=' 'BEGIN {OFS="="} \
     	/^[[:space:]]*#/ {print; next} \
     	/^[[:space:]]*$$/ {print ""; next} \
     	NF>=1 {gsub(/^[[:space:]]+|[[:space:]]+$$/, "", $$1); print $$1"="}' .env > .env.example
 	echo ".env.example generated successfully."
+
+setup:
+	docker compose -f ./build/docker-compose.local.yml up -d 
+
+run-local-op:
+	go run ./cmd/op
 
 install-goose:
 	go install github.com/pressly/goose/v3/cmd/goose@latest

@@ -5,7 +5,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/aarondl/sqlboiler/v4/types"
 	"github.com/tuanta7/ciam/internal/config"
 	"github.com/tuanta7/ciam/internal/repository/models"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
@@ -132,31 +131,6 @@ func (c *Client) restrictScopes(scopes []string) []string {
 		}
 	}
 	return allowed
-}
-
-func (c *Client) ToRow() *models.Client {
-	return &models.Client{
-		ID:                             c.ID,
-		Name:                           c.Name,
-		Description:                    c.Description,
-		Secret:                         c.Secret,
-		Scope:                          types.StringArray(c.Scopes),
-		RedirectUris:                   types.StringArray(c.RedirectURIList),
-		PostLogoutRedirectUris:         types.StringArray(c.PostLogoutRedirectURIList),
-		GrantTypes:                     types.StringArray(c.GrantTypeList),
-		ResponseTypes:                  types.StringArray(c.ResponseTypeList),
-		Audience:                       types.StringArray(c.AudienceList),
-		TokenEndpointAuthMethod:        c.TokenEndpointAuthMethod,
-		ApplicationType:                c.ApplicationTypeName,
-		AccessTokenType:                c.AccessTokenTypeName,
-		LoginURL:                       c.LoginURLTemplate,
-		IDTokenLifetimeSeconds:         int(c.IDTokenLifetimeSeconds),
-		DevMode:                        c.DevModeEnabled,
-		ClockSkewSeconds:               int(c.ClockSkewSeconds),
-		IDTokenUserinfoClaimsAssertion: c.IDTokenUserinfoClaimsAsserted,
-		CreatedBy:                      c.CreatedBy,
-		UpdatedBy:                      c.UpdatedBy,
-	}
 }
 
 func NewClientFromRow(row *models.Client) *Client {

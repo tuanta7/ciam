@@ -32,23 +32,38 @@ func (h *Handler) ListClients(w http.ResponseWriter, r *http.Request) {
 		pageSize = 10
 	}
 
-	clients, err := h.uc.List(r.Context(), page, pageSize)
+	clients, total, err := h.uc.List(r.Context(), page, pageSize)
 	if err != nil {
 		_ = rest.ErrorJSON(w, rest.InternalError().WithDescription(err.Error()))
 		return
 	}
 
-	_ = rest.WriteJSON(w, http.StatusOK, clients)
+	_ = rest.WriteJSON(w, http.StatusOK, rest.JSON{
+		"status": "sucess",
+		"data": rest.JSON{
+			"clients": clients,
+			"pagination": rest.JSON{
+				"page":     page,
+				"pageSize": pageSize,
+				"total":    total,
+			},
+		},
+	})
 }
 
 func (h *Handler) GetClient(w http.ResponseWriter, r *http.Request) {
-	item, err := h.uc.Get(r.Context(), chi.URLParam(r, "id"))
+	client, err := h.uc.Get(r.Context(), chi.URLParam(r, "id"))
 	if err != nil {
 		h.writeError(w, err)
 		return
 	}
 
-	_ = rest.WriteJSON(w, http.StatusOK, item)
+	_ = rest.WriteJSON(w, http.StatusOK, rest.JSON{
+		"status": "sucess",
+		"data": rest.JSON{
+			"client": client,
+		},
+	})
 }
 
 func (h *Handler) CreateClient(w http.ResponseWriter, r *http.Request) {
@@ -70,8 +85,11 @@ func (h *Handler) CreateClient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = rest.WriteJSON(w, http.StatusCreated, rest.JSON{
-		"client": client,
-		"secret": secret,
+		"status": "sucess",
+		"data": rest.JSON{
+			"client": client,
+			"secret": secret,
+		},
 	})
 }
 
@@ -96,7 +114,12 @@ func (h *Handler) UpdateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = rest.WriteJSON(w, http.StatusOK, client)
+	_ = rest.WriteJSON(w, http.StatusOK, rest.JSON{
+		"status": "sucess",
+		"data": rest.JSON{
+			"client": client,
+		},
+	})
 }
 
 func (h *Handler) DeleteClient(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +128,11 @@ func (h *Handler) DeleteClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	_ = rest.WriteJSON(w, http.StatusNoContent, rest.JSON{
+		"status": "sucess",
+		"data":   nil,
+	})
+
 }
 
 func (h *Handler) writeError(w http.ResponseWriter, err error) {

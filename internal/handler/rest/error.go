@@ -3,7 +3,8 @@ package rest
 import "net/http"
 
 type HTTPError struct {
-	Code        int    `json:"code"`
+	Code        int    `json:"-"`
+	Status      string `json:"status"`
 	Message     string `json:"message"`
 	Description string `json:"description,omitempty"`
 	Hint        string `json:"hint,omitempty"`
@@ -12,6 +13,7 @@ type HTTPError struct {
 func Error(code int, message string) HTTPError {
 	return HTTPError{
 		Code:    code,
+		Status:  "error",
 		Message: message,
 	}
 }

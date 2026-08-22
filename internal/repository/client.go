@@ -21,6 +21,10 @@ func NewClientRepository(exec boil.ContextExecutor) *ClientRepository {
 	}
 }
 
+func (r *ClientRepository) Count(ctx context.Context) (int64, error) {
+	return models.Clients().Count(ctx, r.exec)
+}
+
 func (r *ClientRepository) List(ctx context.Context, offset, limit int) ([]*domain.Client, error) {
 	clients := make([]*domain.Client, 0)
 

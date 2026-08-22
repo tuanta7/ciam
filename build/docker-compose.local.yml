@@ -1,3 +1,4 @@
+name: ciam
 services:
   postgres:
     image: postgres:18.0-alpine

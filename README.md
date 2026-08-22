@@ -60,3 +60,19 @@ The complete list of specifications can be found [here](https://openid.net/devel
 | OAuth 2.0 Form Post Response Mode  | ⏳ Development |
 | OpenID Connect RP-Initiated Logout | Todo           |
 | Pairwise Identifier                | Todo           |
+
+### Admin APIs Response Format
+
+Reference: [JSend](https://github.com/omniti-labs/jsend)
+
+```sh
+{
+    status : "success",
+    data : {
+        "posts" : [
+            { "id" : 1, "title" : "A blog post", "body" : "Some useful content" },
+            { "id" : 2, "title" : "Another blog post", "body" : "More content" },
+        ]
+     }
+}
+```
