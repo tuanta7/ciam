@@ -82,7 +82,8 @@ func (a *AuthRequest) Done() bool {
 	return !a.authTime.IsZero()
 }
 
-// GetAMR reports how the subject authenticated; password is the only method so far.
+// GetAMR reports how the subject authenticated;
+// password is the only method so far.
 func (a *AuthRequest) GetAMR() []string {
 	if a.Done() {
 		return []string{"pwd"}

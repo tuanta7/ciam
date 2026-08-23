@@ -7,9 +7,7 @@ import (
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
 
-type AuthRequestUC interface {
-	Create()
-}
+type AuthRequestUC interface{}
 
 func (s *Storage) CreateAuthRequest(ctx context.Context, request *oidc.AuthRequest, s2 string) (op.AuthRequest, error) {
 	//TODO implement me

@@ -26,7 +26,7 @@ func NewProvider(issuer, cryptoKey string, clientUC storage.ClientUC) (*Provider
 	}
 
 	// TODO
-	storage := storage.New(nil, nil)
+	storage := storage.New(clientUC, nil)
 	provider, err := op.NewProvider(
 		&op.Config{
 			// CryptoKey encrypts the authorization code handed to the client.

@@ -28,6 +28,18 @@ type ClientInput struct {
 	IDTokenUserinfoClaimsAssertion bool     `json:"id_token_userinfo_claims_assertion"`
 }
 
+func (in *ClientInput) validate() error {
+	if _, err := op.ApplicationTypeString(in.applicationType()); err != nil {
+		return fmt.Errorf("%w: %v", domain.ErrInvalidClient, err)
+	}
+
+	if _, err := op.AccessTokenTypeString(in.accessTokenType()); err != nil {
+		return fmt.Errorf("%w: %v", domain.ErrInvalidClient, err)
+	}
+
+	return nil
+}
+
 func (in *ClientInput) scopes() []string {
 	if len(in.Scopes) == 0 {
 		return []string{oidc.ScopeOpenID}
@@ -96,18 +108,6 @@ func (in *ClientInput) idTokenLifetimeSeconds() int32 {
 		return int32(config.DefaultIDTokenLifetime.Seconds())
 	}
 	return in.IDTokenLifetimeSeconds
-}
-
-func (in *ClientInput) validate() error {
-	if _, err := op.ApplicationTypeString(in.applicationType()); err != nil {
-		return fmt.Errorf("%w: %v", domain.ErrInvalidClient, err)
-	}
-
-	if _, err := op.AccessTokenTypeString(in.accessTokenType()); err != nil {
-		return fmt.Errorf("%w: %v", domain.ErrInvalidClient, err)
-	}
-
-	return nil
 }
 
 func (in *ClientInput) toDomain() *domain.Client {

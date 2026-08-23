@@ -6,10 +6,9 @@ import (
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
 
-// Storage implements the zitadel op.Storage interface
-
 var _ op.Storage = &Storage{}
 
+// Storage implements the zitadel op.Storage interface
 type Storage struct {
 	client      ClientUC
 	authRequest AuthRequestUC
