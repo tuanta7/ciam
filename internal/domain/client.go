@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/tuanta7/ciam/internal/config"
-	"github.com/tuanta7/ciam/internal/repository/models"
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/oidc/v3/pkg/op"
 )
@@ -131,31 +130,4 @@ func (c *Client) restrictScopes(scopes []string) []string {
 		}
 	}
 	return allowed
-}
-
-func NewClientFromRow(row *models.Client) *Client {
-	return &Client{
-		ID:                            row.ID,
-		Name:                          row.Name,
-		Description:                   row.Description,
-		Secret:                        row.Secret,
-		Scopes:                        row.Scope,
-		RedirectURIList:               row.RedirectUris,
-		PostLogoutRedirectURIList:     row.PostLogoutRedirectUris,
-		GrantTypeList:                 row.GrantTypes,
-		ResponseTypeList:              row.ResponseTypes,
-		AudienceList:                  row.Audience,
-		TokenEndpointAuthMethod:       row.TokenEndpointAuthMethod,
-		ApplicationTypeName:           row.ApplicationType,
-		AccessTokenTypeName:           row.AccessTokenType,
-		LoginURLTemplate:              row.LoginURL,
-		IDTokenLifetimeSeconds:        int32(row.IDTokenLifetimeSeconds),
-		DevModeEnabled:                row.DevMode,
-		ClockSkewSeconds:              int32(row.ClockSkewSeconds),
-		IDTokenUserinfoClaimsAsserted: row.IDTokenUserinfoClaimsAssertion,
-		CreatedBy:                     row.CreatedBy,
-		UpdatedBy:                     row.UpdatedBy,
-		CreatedAt:                     row.CreatedAt,
-		UpdatedAt:                     row.UpdatedAt,
-	}
 }

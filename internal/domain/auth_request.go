@@ -10,11 +10,9 @@ import (
 var _ op.AuthRequest = (*AuthRequest)(nil)
 
 type AuthRequest struct {
-	subject  string
-	authTime time.Time
-
 	ID            string
 	ClientID      string
+	Subject       string
 	RedirectURI   string
 	Scopes        []string
 	ResponseType  oidc.ResponseType
@@ -23,7 +21,33 @@ type AuthRequest struct {
 	Nonce         string
 	LoginHint     string
 	CodeChallenge *oidc.CodeChallenge
+	AuthTime      time.Time
 	CreatedAt     time.Time
+	ExpiresAt     time.Time
+}
+
+// NewAuthRequest maps the parsed /authorize request; the ID and the deadline
+// are assigned by the use case.
+func NewAuthRequest(request *oidc.AuthRequest) *AuthRequest {
+	authRequest := &AuthRequest{
+		ClientID:     request.ClientID,
+		RedirectURI:  request.RedirectURI,
+		Scopes:       request.Scopes,
+		ResponseType: request.ResponseType,
+		ResponseMode: request.ResponseMode,
+		State:        request.State,
+		Nonce:        request.Nonce,
+		LoginHint:    request.LoginHint,
+	}
+
+	if request.CodeChallenge != "" {
+		authRequest.CodeChallenge = &oidc.CodeChallenge{
+			Challenge: request.CodeChallenge,
+			Method:    request.CodeChallengeMethod,
+		}
+	}
+
+	return authRequest
 }
 
 func (a *AuthRequest) GetID() string {
@@ -39,7 +63,7 @@ func (a *AuthRequest) GetAudience() []string {
 }
 
 func (a *AuthRequest) GetAuthTime() time.Time {
-	return a.authTime
+	return a.AuthTime
 }
 
 func (a *AuthRequest) GetClientID() string {
@@ -75,11 +99,11 @@ func (a *AuthRequest) GetState() string {
 }
 
 func (a *AuthRequest) GetSubject() string {
-	return a.subject
+	return a.Subject
 }
 
 func (a *AuthRequest) Done() bool {
-	return !a.authTime.IsZero()
+	return !a.AuthTime.IsZero()
 }
 
 // GetAMR reports how the subject authenticated;

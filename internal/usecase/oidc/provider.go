@@ -15,7 +15,11 @@ type Provider struct {
 	Store *storage.Storage
 }
 
-func NewProvider(issuer, cryptoKey string, clientUC storage.ClientUC) (*Provider, error) {
+func NewProvider(
+	issuer, cryptoKey string,
+	clientUC storage.ClientUC,
+	authRequestUC storage.AuthRequestUC,
+) (*Provider, error) {
 	opts := []op.Option{
 		op.WithCORSOptions(&cors.Options{}),
 		op.WithLogger(otelx.NewLogger("ciam").Logger),
@@ -25,8 +29,7 @@ func NewProvider(issuer, cryptoKey string, clientUC storage.ClientUC) (*Provider
 		opts = append(opts, op.WithAllowInsecure())
 	}
 
-	// TODO
-	storage := storage.New(clientUC, nil)
+	storage := storage.New(clientUC, authRequestUC)
 	provider, err := op.NewProvider(
 		&op.Config{
 			// CryptoKey encrypts the authorization code handed to the client.

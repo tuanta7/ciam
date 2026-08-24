@@ -9,6 +9,7 @@ import (
 	clientrest "github.com/tuanta7/ciam/internal/handler/rest/client"
 	"github.com/tuanta7/ciam/internal/handler/rest/login"
 	"github.com/tuanta7/ciam/internal/repository"
+	authrequestuc "github.com/tuanta7/ciam/internal/usecase/authrequest"
 	clientuc "github.com/tuanta7/ciam/internal/usecase/client"
 	"github.com/tuanta7/ciam/internal/usecase/oidc"
 	"github.com/tuanta7/ciam/pkg/utils"
@@ -31,12 +32,17 @@ func main() {
 
 			clientRepo := repository.NewClientRepository(executor)
 			clientUC := clientuc.NewUseCase(clientRepo)
+
+			authRequestRepo := repository.NewAuthRequestRepository(executor)
+			authRequestUC := authrequestuc.NewUseCase(authRequestRepo)
+
 			clientHandler := clientrest.NewHandler(clientUC)
 
 			provider, err := oidc.NewProvider(
 				cfg.Issuer,
 				cfg.CryptoKey,
 				clientUC,
+				authRequestUC,
 			)
 			if err != nil {
 				return err

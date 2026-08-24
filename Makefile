@@ -34,8 +34,8 @@ install-sqlboiler:
 	go install github.com/aarondl/sqlboiler/v4/drivers/sqlboiler-psql@latest
 
 sqlboiler-gen:
-	echo "Generating Go models from the database schema using sqlboiler"
-	sqlboiler psql -o internal/repository/models -p models --no-tests --wipe
+	echo "Generating Go ORM models from the database schema using sqlboiler"
+	sqlboiler psql -o internal/repository/orm -p orm --no-tests --wipe
 
 mockery-gen:
 	echo "Generating mock implementations using mockery"
